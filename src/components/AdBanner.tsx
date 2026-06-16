@@ -1,5 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from './Card';
+
+declare global {
+  interface Window {
+    adsbygoogle: any[];
+  }
+}
 
 interface AdBannerProps {
   orientation?: 'vertical' | 'horizontal';
@@ -7,38 +13,37 @@ interface AdBannerProps {
 }
 
 export const AdBanner: React.FC<AdBannerProps> = ({ orientation = 'horizontal', className }) => {
+  useEffect(() => {
+    try {
+      // Sadece component mount olduğunda (reklam alanı sayfaya yüklendiğinde) Google'a "reklamı göster" komutu yolluyoruz.
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (err) {
+      console.error('AdSense error:', err);
+    }
+  }, []);
+
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl overflow-hidden relative",
-        "before:absolute before:inset-0 before:bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] before:opacity-5",
+        "flex items-center justify-center bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl overflow-hidden relative",
         orientation === 'vertical' ? "w-full min-h-[600px]" : "w-full min-h-[100px]",
         className
       )}
     >
-      {/* Decorative dots in corners */}
-      <div className="absolute top-2 left-2 w-1.5 h-1.5 rounded-full bg-[var(--border-color)]" />
-      <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[var(--border-color)]" />
-      <div className="absolute bottom-2 left-2 w-1.5 h-1.5 rounded-full bg-[var(--border-color)]" />
-      <div className="absolute bottom-2 right-2 w-1.5 h-1.5 rounded-full bg-[var(--border-color)]" />
-      
-      <span className="text-xs uppercase tracking-widest text-[var(--text-muted)] font-bold mb-1">
-        Reklam Alanı
-      </span>
-      <span className="text-[10px] text-[var(--text-muted)]/60 text-center px-4">
-        Google AdSense kodunuzu buraya ekleyebilirsiniz.
+      {/* 
+        Eğer Google reklam göndermezse (henüz onaylanmadıysa veya adblock varsa) 
+        arkada hafif bir "Reklam Alanı" yazısı kalması için:
+      */}
+      <span className="absolute text-xs uppercase tracking-widest text-[var(--text-muted)] font-bold opacity-30 -z-10">
+        Reklam
       </span>
 
-      {/* 
-        İleride buraya Google AdSense kodunu ekleyebilirsiniz:
-        <ins className="adsbygoogle"
-             style={{ display: "block" }}
-             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-             data-ad-slot="XXXXXXXXXX"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-      */}
+      <ins className="adsbygoogle"
+           style={{ display: "block", width: "100%", height: "100%" }}
+           data-ad-client="ca-pub-4772123019002421"
+           data-ad-slot="8176312991"
+           data-ad-format={orientation === 'vertical' ? "auto" : "horizontal"}
+           data-full-width-responsive="true"></ins>
     </div>
   );
 };
