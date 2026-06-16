@@ -16,6 +16,7 @@ import { motion } from 'motion/react';
 export const Trades: React.FC = () => {
   const { data, addTrade, deleteTrade, updateTrade, livePrices } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
 
   const getPrice = (ticker: string, buyPrice: number) => livePrices[ticker] || getMockLivePrice(ticker, buyPrice);
   const [formData, setFormData] = useState<Partial<Trade>>({
@@ -91,7 +92,7 @@ export const Trades: React.FC = () => {
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => openTradeModal(trade)} className="p-1.5 text-[var(--text-muted)] hover:text-blue-500 transition-colors"><Edit3 size={16} /></button>
-                  <button onClick={() => deleteTrade(trade.id)} className="p-1.5 text-[var(--text-muted)] hover:text-[#f43f5e] transition-colors"><Trash2 size={16} /></button>
+                  <button onClick={() => setDeleteConfirmationId(trade.id)} className="p-1.5 text-[var(--text-muted)] hover:text-[#f43f5e] transition-colors"><Trash2 size={16} /></button>
                 </div>
               </div>
 
@@ -152,6 +153,20 @@ export const Trades: React.FC = () => {
           <Input label="Not" value={formData.note || ''} onChange={e => setFormData({...formData, note: e.target.value})} />
           
           <Button onClick={handleSave} className="mt-4" size="lg">Kaydet</Button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!deleteConfirmationId} onClose={() => setDeleteConfirmationId(null)} title="İşlemi Sil">
+        <div className="flex flex-col gap-4">
+          <p className="text-[var(--text-main)] font-medium">Bu işlemi silmek istediğinize emin misiniz?</p>
+          <p className="text-sm text-[var(--text-muted)]">Yanlışlıkla silinmesini önlemek için onayınız gerekiyor. Bu işlem geri alınamaz.</p>
+          <div className="flex gap-3 justify-end mt-4">
+            <Button variant="secondary" onClick={() => setDeleteConfirmationId(null)}>İptal</Button>
+            <Button variant="danger" onClick={() => {
+              if (deleteConfirmationId) deleteTrade(deleteConfirmationId);
+              setDeleteConfirmationId(null);
+            }}>Evet, Sil</Button>
+          </div>
         </div>
       </Modal>
     </div>

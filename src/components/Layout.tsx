@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User } from 'lucide-react';
+import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useData } from '../context/DataContext';
 import { AdBanner } from './AdBanner';
@@ -29,11 +29,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     <div className="min-h-screen flex flex-col pb-20 md:pb-0">
       <header className="sticky top-0 z-40 w-full border-b border-[var(--border-color)] bg-[var(--bg-main)]/80 backdrop-blur-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#10b981] to-[#059669] flex items-center justify-center text-white font-bold">
-              B
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#0f1115] dark:bg-white flex items-center justify-center text-white dark:text-[#0f1115] shadow-sm">
+              <TrendingUp size={22} strokeWidth={2.5} />
             </div>
-            <span className="text-xl font-bold tracking-tight hidden sm:block">Borsa Defterim</span>
+            <span className="text-[22px] font-extrabold italic tracking-tight hidden sm:block">Borsa Defterim</span>
           </div>
 
           {/* Desktop Nav */}
@@ -112,6 +112,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="w-full py-8 text-center mt-auto">
+        <p className="text-[11px] font-semibold text-[var(--text-muted)] tracking-widest uppercase">
+          Borsa Defterim © {new Date().getFullYear()} • Yatırım Tavsiyesi Değildir
+        </p>
+      </footer>
 
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--bg-card)] border-t border-[var(--border-color)] pb-safe">
