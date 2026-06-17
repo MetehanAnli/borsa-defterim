@@ -41,7 +41,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     try {
       const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-        if (currentUser && currentUser.email !== 'metehananli@gmail.com') {
+        const adminEmails = ['metehananli@gmail.com', 'halkaarz12@gmail.com'];
+        if (currentUser && !adminEmails.includes(currentUser.email)) {
           alert('Yetkisiz giriş! Sadece yönetici yetkisine sahip hesaplar bu panele erişebilir.');
           await signOut(auth);
           setUser(null);
