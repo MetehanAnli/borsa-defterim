@@ -346,11 +346,15 @@ export const IPOs: React.FC = () => {
                 )}
               </div>
 
-              <div ref={captureRef} className={`flex flex-col gap-6 ${isCapturing ? 'p-6 bg-[var(--bg-main)] rounded-2xl' : ''}`}>
+              <div 
+                ref={captureRef} 
+                className={`flex flex-col gap-6 ${isCapturing ? 'p-8 bg-[#0b1121] text-white rounded-3xl' : ''}`}
+                style={isCapturing ? { width: '540px', minWidth: '540px', margin: '0 auto' } : undefined}
+              >
                 {isCapturing && (
-                  <div className="flex flex-col items-center justify-center mb-2 pb-4 border-b border-[var(--border-color)]">
-                    <span className="text-[28px] font-extrabold italic tracking-tight bg-gradient-to-r from-[#10b981] to-[#3b82f6] bg-clip-text text-transparent drop-shadow-sm">Borsa Defterim</span>
-                    <h2 className="text-2xl font-bold mt-2">{selectedIpo.ticker} Halka Arz Tahmini</h2>
+                  <div className="flex flex-col items-center justify-center mb-2 pb-6 border-b border-[#1e293b]">
+                    <span className="text-[32px] font-extrabold italic tracking-tight bg-gradient-to-r from-[#10b981] to-[#3b82f6] bg-clip-text text-transparent drop-shadow-sm">Borsa Defterim</span>
+                    <h2 className="text-2xl font-bold mt-3 text-white text-center">{selectedIpo.ticker} Halka Arz Tahmini</h2>
                   </div>
                 )}
                 
@@ -457,10 +461,10 @@ export const IPOs: React.FC = () => {
                   <span className="text-sm font-semibold text-[var(--text-muted)] bg-[var(--bg-card)] px-3 py-1 rounded-full">Gereken Tutar: ₺{requiredAmount.toFixed(2)}</span>
                 </div>
               ) : hasScenarios ? (
-                <div className="bg-[var(--bg-main)] p-4 rounded-xl border border-[var(--border-color)] flex flex-col gap-3">
+                <div className={`p-4 rounded-xl border flex flex-col gap-3 ${isCapturing ? 'bg-[#0f172a] border-[#1e293b]' : 'bg-[var(--bg-main)] border-[var(--border-color)]'}`}>
                   <div className="flex items-center gap-2 text-lg font-bold">
                     <Users className="text-[#3b82f6]" size={20} />
-                    <span>Tahmini Katılım Senaryoları</span>
+                    <span className={isCapturing ? 'text-white' : ''}>Tahmini Katılım Senaryoları</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3">
@@ -471,11 +475,11 @@ export const IPOs: React.FC = () => {
                       return (
                         <button 
                           key={idx}
-                          onClick={() => setSelectedScenarioIndex(idx)}
-                          className={`flex flex-col items-center p-3 rounded-xl border transition-all ${isSelected ? 'bg-[#3b82f6]/10 border-[#3b82f6] shadow-sm scale-[1.02]' : 'bg-[var(--bg-card)] border-[var(--border-color)] hover:border-[#3b82f6]/50'}`}
+                          onClick={() => !isCapturing && setSelectedScenarioIndex(idx)}
+                          className={`flex flex-col items-center p-3 rounded-xl border transition-all ${isSelected ? 'bg-[#3b82f6]/10 border-[#3b82f6] shadow-sm scale-[1.02]' : isCapturing ? 'bg-[#1e293b] border-[#334155]' : 'bg-[var(--bg-card)] border-[var(--border-color)] hover:border-[#3b82f6]/50'}`}
                         >
-                          <span className="text-[11px] sm:text-xs font-bold text-[var(--text-muted)] uppercase">{scen.participants}</span>
-                          <span className={`text-lg font-extrabold ${isSelected ? 'text-[#3b82f6]' : 'text-[var(--text-main)]'}`}>{scen.lots} Lot</span>
+                          <span className={`text-[11px] sm:text-xs font-bold uppercase ${isCapturing ? 'text-slate-400' : 'text-[var(--text-muted)]'}`}>{scen.participants}</span>
+                          <span className={`text-lg font-extrabold ${isSelected ? 'text-[#3b82f6]' : isCapturing ? 'text-white' : 'text-[var(--text-main)]'}`}>{scen.lots} Lot</span>
                           <span className="text-xs font-semibold text-[#10b981]">₺{reqAmt.toFixed(2)}</span>
                         </button>
                       )
@@ -489,32 +493,32 @@ export const IPOs: React.FC = () => {
               )}
 
               {baseLot > 0 && (
-                <div className="bg-[var(--bg-main)] p-4 rounded-xl border border-[var(--border-color)] flex flex-col gap-3">
+                <div className={`p-4 rounded-xl border flex flex-col gap-3 ${isCapturing ? 'bg-[#0f172a] border-[#1e293b]' : 'bg-[var(--bg-main)] border-[var(--border-color)]'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-lg font-bold">
                       <TrendingUp className="text-[#10b981]" size={20} />
-                      <span>10 Günlük Tavan Tablosu</span>
+                      <span className={isCapturing ? 'text-white' : ''}>10 Günlük Tavan Tablosu</span>
                     </div>
-                    <span className="text-[10px] font-bold text-[var(--text-muted)] bg-[var(--bg-card)] px-2 py-1 rounded border border-[var(--border-color)]">{baseLot} Lot için</span>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded border ${isCapturing ? 'bg-[#1e293b] text-slate-300 border-[#334155]' : 'text-[var(--text-muted)] bg-[var(--bg-card)] border-[var(--border-color)]'}`}>{baseLot} Lot için</span>
                   </div>
 
-                  <div className="overflow-x-auto hide-scrollbar rounded-lg border border-[var(--border-color)]">
+                  <div className={`rounded-lg border ${isCapturing ? 'overflow-visible border-[#1e293b]' : 'overflow-x-auto hide-scrollbar border-[var(--border-color)]'}`}>
                     <table className="w-full text-sm text-left">
-                      <thead className="text-[10px] text-[var(--text-muted)] uppercase bg-[var(--bg-card)] border-b border-[var(--border-color)]">
+                      <thead className={`text-[10px] uppercase border-b ${isCapturing ? 'bg-[#1e293b] text-slate-400 border-[#334155]' : 'text-[var(--text-muted)] bg-[var(--bg-card)] border-[var(--border-color)]'}`}>
                         <tr>
-                          <th className="px-3 py-2">Gün</th>
-                          <th className="px-3 py-2">Fiyat</th>
-                          <th className="px-3 py-2 text-right">Net Kâr</th>
-                          <th className="px-3 py-2 text-right">Toplam</th>
+                          <th className="px-3 py-3">Gün</th>
+                          <th className="px-3 py-3">Fiyat</th>
+                          <th className="px-3 py-3 text-right">Net Kâr</th>
+                          <th className="px-3 py-3 text-right">Toplam</th>
                         </tr>
                       </thead>
                       <tbody>
                         {ceilingDays.map((d, i) => (
-                          <tr key={d.day} className={`border-b border-[var(--border-color)] last:border-0 ${i % 2 === 0 ? 'bg-transparent' : 'bg-[var(--bg-card)]/50'}`}>
-                            <td className="px-3 py-2 font-bold text-[var(--text-muted)]">{d.day}. Gün</td>
-                            <td className="px-3 py-2 font-semibold">₺{d.price.toFixed(2)}</td>
-                            <td className="px-3 py-2 font-bold text-[#10b981] text-right">+₺{d.profit.toFixed(2)}</td>
-                            <td className="px-3 py-2 font-extrabold text-right text-[#3b82f6]">₺{d.totalValue.toFixed(2)}</td>
+                          <tr key={d.day} className={`border-b last:border-0 ${isCapturing ? 'border-[#1e293b]' : 'border-[var(--border-color)]'} ${i % 2 === 0 ? 'bg-transparent' : isCapturing ? 'bg-[#1e293b]/30' : 'bg-[var(--bg-card)]/50'}`}>
+                            <td className={`px-3 py-2.5 font-bold ${isCapturing ? 'text-slate-400' : 'text-[var(--text-muted)]'}`}>{d.day}. Gün</td>
+                            <td className={`px-3 py-2.5 font-semibold ${isCapturing ? 'text-white' : ''}`}>₺{d.price.toFixed(2)}</td>
+                            <td className="px-3 py-2.5 font-bold text-[#10b981] text-right">+₺{d.profit.toFixed(2)}</td>
+                            <td className="px-3 py-2.5 font-extrabold text-right text-[#3b82f6]">₺{d.totalValue.toFixed(2)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -524,7 +528,7 @@ export const IPOs: React.FC = () => {
               )}
               
               {isCapturing && (
-                <div className="text-center mt-4 text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-bold">
+                <div className="text-center mt-2 text-[11px] text-slate-500 uppercase tracking-widest font-bold">
                   Bu görsel Borsa Defterim uygulaması ile oluşturulmuştur. Yatırım Tavsiyesi Değildir.
                 </div>
               )}
