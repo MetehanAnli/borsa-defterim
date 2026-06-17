@@ -192,7 +192,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addIpo = async (ipo: Omit<IpoData, 'id'>) => {
     try {
-      await addDoc(collection(db, 'ipos'), ipo);
+      const cleanData = Object.fromEntries(Object.entries(ipo).filter(([_, v]) => v !== undefined));
+      await addDoc(collection(db, 'ipos'), cleanData as any);
     } catch (e) {
       console.error("Error adding IPO", e);
       alert("Halka arz eklenemedi. Firebase ayarlarını kontrol edin.");
@@ -202,7 +203,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateIpo = async (ipo: IpoData) => {
     try {
       const { id, ...data } = ipo;
-      await updateDoc(doc(db, 'ipos', id), data as any);
+      const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+      await updateDoc(doc(db, 'ipos', id), cleanData as any);
     } catch (e) {
       console.error("Error updating IPO", e);
     }
