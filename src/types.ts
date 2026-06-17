@@ -53,3 +53,15 @@ export const defaultUserData: UserData = {
   watchlist: [],
   settings: defaultSettings
 };
+
+export interface IpoData {
+  id: string;
+  ticker: string;
+  companyName: string;
+  price: number;
+  lotAmount: number;
+  distributionType: string;
+  dateRange: string;
+  prospectusUrl?: string;
+  status: 'Yaklaşan' | 'İşlem Görüyor';
+}

@@ -4,13 +4,14 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { AutocompleteInput } from '../components/AutocompleteInput';
-import { formatCurrency } from '../utils/math';
+import { useCurrency } from '../context/CurrencyContext';
 import { Plus, Trash2, DollarSign } from 'lucide-react';
 import { Dividend } from '../types';
 import { BIST_STOCKS } from '../utils/bistStocks';
 
 export const Dividends: React.FC = () => {
   const { data, addDividend, deleteDividend } = useData();
+  const { formatCurrency, currency } = useCurrency();
   const [formData, setFormData] = useState<Partial<Dividend>>({
     ticker: '', amount: 0, date: new Date().toISOString().split('T')[0], note: ''
   });
@@ -43,7 +44,7 @@ export const Dividends: React.FC = () => {
             onSelectOption={val => setFormData({...formData, ticker: val})}
             options={BIST_STOCKS.map(s => ({ label: s.name, value: s.symbol }))}
           />
-          <Input label="Tutar (₺)" type="number" step="0.01" value={formData.amount || ''} onChange={e => setFormData({...formData, amount: Number(e.target.value)})} />
+          <Input label={`Tutar (${currency === 'TRY' ? '₺' : '$'})`} type="number" step="0.01" value={formData.amount || ''} onChange={e => setFormData({...formData, amount: Number(e.target.value)})} />
           <Input label="Tarih" type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
           <Input label="Not" value={formData.note || ''} onChange={e => setFormData({...formData, note: e.target.value})} />
           <Button onClick={handleSave} className="mt-2">Kaydet</Button>

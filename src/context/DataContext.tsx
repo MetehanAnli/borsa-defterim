@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { UserData, defaultUserData, Trade, Dividend, WatchlistItem } from '../types';
+import { UserData, defaultUserData, Trade, Dividend, WatchlistItem, IpoData } from '../types';
 import { generateDemoData } from '../utils/demoData';
+import { db } from '../utils/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { auth, googleProvider } from '../utils/firebase';
+import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 
 interface DataContextType {
   data: UserData;
@@ -19,6 +23,10 @@ interface DataContextType {
   injectDemoData: () => void;
   clearAllData: () => void;
   livePrices: Record<string, number>;
+  ipos: IpoData[];
+  addIpo: (ipo: Omit<IpoData, 'id'>) => Promise<void>;
+  updateIpo: (ipo: IpoData) => Promise<void>;
+  deleteIpo: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -29,7 +37,41 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [data, setData] = useState<UserData>(defaultUserData);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any | null>(null);
+
+  useEffect(() => {
+    try {
+      const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        if (currentUser && currentUser.email !== 'metehananli@gmail.com') {
+          alert('Yetkisiz giriş! Sadece yönetici yetkisine sahip hesaplar bu panele erişebilir.');
+          await signOut(auth);
+          setUser(null);
+        } else {
+          setUser(currentUser);
+        }
+      });
+      return () => unsubscribe();
+    } catch(e) {}
+  }, []);
   const [livePrices, setLivePrices] = useState<Record<string, number>>({});
+  const [ipos, setIpos] = useState<IpoData[]>([]);
+
+  // Listen to IPOs from Firebase
+  useEffect(() => {
+    try {
+      const unsubscribe = onSnapshot(collection(db, 'ipos'), (snapshot) => {
+        const ipoList: IpoData[] = [];
+        snapshot.forEach((docSnap) => {
+          ipoList.push({ id: docSnap.id, ...docSnap.data() } as IpoData);
+        });
+        setIpos(ipoList);
+      }, (error) => {
+        console.error("Firebase IPO listener error (check config):", error);
+      });
+      return () => unsubscribe();
+    } catch (e) {
+      console.warn("Firebase not properly configured yet.");
+    }
+  }, []);
 
   // Load from local storage on mount
   useEffect(() => {
@@ -91,13 +133,20 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [data.trades, data.watchlist, isLoading]);
 
   const loginWithGoogle = async () => {
-    // Mock login for now
-    alert('Google Girişi (Firebase Entegrasyonu Gerektirir)');
-    setUser({ displayName: 'Demo Kullanıcı', email: 'demo@example.com', photoURL: '' });
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error: any) {
+      console.error("Google login failed", error);
+      alert(`Giriş hatası detayları: ${error.message || error}`);
+    }
   };
 
   const logout = async () => {
-    setUser(null);
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
   };
 
   const addTrade = useCallback((trade: Trade) => {
@@ -140,6 +189,32 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, []);
 
+  const addIpo = async (ipo: Omit<IpoData, 'id'>) => {
+    try {
+      await addDoc(collection(db, 'ipos'), ipo);
+    } catch (e) {
+      console.error("Error adding IPO", e);
+      alert("Halka arz eklenemedi. Firebase ayarlarını kontrol edin.");
+    }
+  };
+
+  const updateIpo = async (ipo: IpoData) => {
+    try {
+      const { id, ...data } = ipo;
+      await updateDoc(doc(db, 'ipos', id), data as any);
+    } catch (e) {
+      console.error("Error updating IPO", e);
+    }
+  };
+
+  const deleteIpo = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'ipos', id));
+    } catch (e) {
+      console.error("Error deleting IPO", e);
+    }
+  };
+
   const updateTargetPortfolio = useCallback((target: number) => {
     setData(prev => ({
       ...prev,
@@ -172,7 +247,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addWatchlistItem, deleteWatchlistItem,
       updateTargetPortfolio,
       injectDemoData, clearAllData,
-      livePrices
+      livePrices,
+      ipos, addIpo, updateIpo, deleteIpo
     }}>
       {children}
     </DataContext.Provider>

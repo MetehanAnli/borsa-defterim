@@ -25,9 +25,7 @@ export const calculateAverageProfitRatio = (trades: Trade[], getLivePrice: (tick
   return total / trades.length;
 };
 
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(amount);
-};
+
 
 export const formatPercentage = (ratio: number): string => {
   return `${ratio > 0 ? '+' : ''}${ratio.toFixed(2)}%`;

@@ -5,7 +5,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { AutocompleteInput } from '../components/AutocompleteInput';
 import { Badge } from '../components/Badge';
-import { formatCurrency } from '../utils/math';
+import { useCurrency } from '../context/CurrencyContext';
 import { getMockLivePrice } from '../utils/demoData';
 import { BIST_STOCKS } from '../utils/bistStocks';
 import { Plus, Trash2, Eye, Target } from 'lucide-react';
@@ -13,6 +13,7 @@ import { WatchlistItem } from '../types';
 
 export const Watchlist: React.FC = () => {
   const { data, addWatchlistItem, deleteWatchlistItem, livePrices } = useData();
+  const { formatCurrency } = useCurrency();
   const [formData, setFormData] = useState<Partial<WatchlistItem>>({
     ticker: '', targetPrice: 0, note: ''
   });

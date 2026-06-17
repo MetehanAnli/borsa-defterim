@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
-import { calculateProfitAmount, calculateProfitRatio, formatCurrency, formatPercentage, calculateTotalProfitRatio, calculateAverageProfitRatio } from '../utils/math';
+import { calculateProfitAmount, calculateProfitRatio, formatPercentage, calculateTotalProfitRatio, calculateAverageProfitRatio } from '../utils/math';
+import { useCurrency } from '../context/CurrencyContext';
 import { getMockLivePrice } from '../utils/demoData';
 import { TrendingUp, TrendingDown, Wallet, DollarSign, Activity, PackageOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -10,6 +11,7 @@ import { AnimatedNumber } from '../components/AnimatedNumber';
 
 export const Dashboard: React.FC = () => {
   const { data, livePrices } = useData();
+  const { formatCurrency } = useCurrency();
   const [profitMode, setProfitMode] = useState<'total' | 'average'>('total');
 
   const getPrice = (ticker: string, buyPrice: number) => livePrices[ticker] || getMockLivePrice(ticker, buyPrice);

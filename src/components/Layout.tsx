@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp, Rocket } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useData } from '../context/DataContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { AdBanner } from './AdBanner';
 import { cn } from './Card';
 
@@ -17,19 +18,21 @@ const TABS = [
   { id: 'trades', label: 'İşlemler', icon: ArrowRightLeft },
   { id: 'dividends', label: 'Temettüler', icon: DollarSign },
   { id: 'watchlist', label: 'İzleme', icon: Eye },
+  { id: 'ipos', label: 'Halka Arz', icon: Rocket },
   { id: 'analytics', label: 'Analiz', icon: LineChart },
   { id: 'settings', label: 'Ayarlar', icon: SettingsIcon },
 ];
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
   const { theme, toggleTheme } = useTheme();
-  const { user } = useData();
+  const { user, loginWithGoogle, logout } = useData();
+  const { currency, toggleCurrency } = useCurrency();
 
   return (
     <div className="min-h-screen flex flex-col pb-20 md:pb-0">
       <header className="sticky top-0 z-40 w-full border-b border-[var(--border-color)] bg-[var(--bg-main)]/80 backdrop-blur-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 select-none" onDoubleClick={!user ? loginWithGoogle : undefined}>
             <div className="w-9 h-9 rounded-xl bg-[#0f1115] dark:bg-white flex items-center justify-center text-white dark:text-[#0f1115] shadow-sm">
               <TrendingUp size={22} strokeWidth={2.5} />
             </div>
@@ -62,17 +65,31 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
           <div className="flex items-center gap-2 sm:gap-4">
             <button
+              onClick={toggleCurrency}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:text-[var(--text-main)] transition-colors font-bold text-lg"
+              title="Para Birimini Değiştir"
+            >
+              {currency === 'TRY' ? '₺' : '$'}
+            </button>
+            <button
               onClick={toggleTheme}
               className="p-2 rounded-xl text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:text-[var(--text-main)] transition-colors"
             >
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <div className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border-color)] px-3 py-1.5 rounded-full">
-              <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white text-xs">
-                <User size={14} />
+            {user ? (
+              <button onClick={logout} className="flex items-center gap-2 bg-[var(--bg-card)] hover:bg-red-500/10 hover:border-red-500/30 border border-[var(--border-color)] px-3 py-1.5 rounded-full transition-all group">
+                <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`} alt="Profile" className="w-6 h-6 rounded-full" />
+                <span className="text-sm font-medium hidden sm:block group-hover:text-red-500">{user.displayName?.split(' ')[0]} (Çıkış)</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border-color)] px-3 py-1.5 rounded-full">
+                <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white text-xs">
+                  <User size={14} />
+                </div>
+                <span className="text-sm font-medium hidden sm:block">Misafir</span>
               </div>
-              <span className="text-sm font-medium hidden sm:block">Misafir</span>
-            </div>
+            )}
           </div>
         </div>
       </header>

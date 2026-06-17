@@ -5,6 +5,7 @@ import { Trades } from './views/Trades';
 import { Dividends } from './views/Dividends';
 import { Watchlist } from './views/Watchlist';
 import { Analytics } from './views/Analytics';
+import { IPOs } from './views/IPOs';
 import { Settings } from './views/Settings';
 import { useData } from './context/DataContext';
 
@@ -26,6 +27,7 @@ function AppContent() {
       {activeTab === 'trades' && <Trades />}
       {activeTab === 'dividends' && <Dividends />}
       {activeTab === 'watchlist' && <Watchlist />}
+      {activeTab === 'ipos' && <IPOs />}
       {activeTab === 'analytics' && <Analytics />}
       {activeTab === 'settings' && <Settings />}
     </Layout>

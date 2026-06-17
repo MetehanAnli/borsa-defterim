@@ -6,7 +6,8 @@ import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { Input } from '../components/Input';
 import { AutocompleteInput } from '../components/AutocompleteInput';
-import { calculateProfitAmount, calculateProfitRatio, formatCurrency, formatPercentage } from '../utils/math';
+import { calculateProfitAmount, calculateProfitRatio, formatPercentage } from '../utils/math';
+import { useCurrency } from '../context/CurrencyContext';
 import { getMockLivePrice } from '../utils/demoData';
 import { BIST_STOCKS } from '../utils/bistStocks';
 import { Plus, Trash2, Edit3, CheckCircle2, AlertCircle, ArrowRightLeft } from 'lucide-react';
@@ -15,8 +16,10 @@ import { motion } from 'motion/react';
 
 export const Trades: React.FC = () => {
   const { data, addTrade, deleteTrade, updateTrade, livePrices } = useData();
+  const { formatCurrency } = useCurrency();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
+  const [addPositionData, setAddPositionData] = useState<{ tradeId: string; ticker: string; addedPrice: number; addedLot: number; addedCommission: number; } | null>(null);
 
   const getPrice = (ticker: string, buyPrice: number) => livePrices[ticker] || getMockLivePrice(ticker, buyPrice);
   const [formData, setFormData] = useState<Partial<Trade>>({
@@ -49,6 +52,26 @@ export const Trades: React.FC = () => {
     
     setIsModalOpen(false);
     setFormData({ ticker: '', buyPrice: 0, sellPrice: undefined, lot: 1, commission: 0, sector: 'Diğer', date: new Date().toISOString().split('T')[0], status: 'open' });
+  };
+
+  const handleAddPositionSave = () => {
+    if (!addPositionData || !addPositionData.addedPrice || !addPositionData.addedLot) return;
+    
+    const trade = data.trades.find(t => t.id === addPositionData.tradeId);
+    if (!trade) return;
+
+    const newLot = trade.lot + Number(addPositionData.addedLot);
+    const newBuyPrice = ((trade.buyPrice * trade.lot) + (Number(addPositionData.addedPrice) * Number(addPositionData.addedLot))) / newLot;
+    const newCommission = trade.commission + Number(addPositionData.addedCommission);
+
+    updateTrade({
+      ...trade,
+      lot: newLot,
+      buyPrice: newBuyPrice,
+      commission: newCommission
+    });
+
+    setAddPositionData(null);
   };
 
   const openTradeModal = (trade?: Trade) => {
@@ -91,8 +114,11 @@ export const Trades: React.FC = () => {
                   <span className="text-sm text-[var(--text-muted)]">{trade.sector} • {trade.date}</span>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => openTradeModal(trade)} className="p-1.5 text-[var(--text-muted)] hover:text-blue-500 transition-colors"><Edit3 size={16} /></button>
-                  <button onClick={() => setDeleteConfirmationId(trade.id)} className="p-1.5 text-[var(--text-muted)] hover:text-[#f43f5e] transition-colors"><Trash2 size={16} /></button>
+                  {!isClosed && (
+                    <button onClick={() => setAddPositionData({ tradeId: trade.id, ticker: trade.ticker, addedPrice: 0, addedLot: 0, addedCommission: 0 })} className="p-1.5 text-[var(--text-muted)] hover:text-[#10b981] transition-colors" title="Ek Alım Yap"><Plus size={16} /></button>
+                  )}
+                  <button onClick={() => openTradeModal(trade)} className="p-1.5 text-[var(--text-muted)] hover:text-blue-500 transition-colors" title="Düzenle"><Edit3 size={16} /></button>
+                  <button onClick={() => setDeleteConfirmationId(trade.id)} className="p-1.5 text-[var(--text-muted)] hover:text-[#f43f5e] transition-colors" title="Sil"><Trash2 size={16} /></button>
                 </div>
               </div>
 
@@ -170,6 +196,19 @@ export const Trades: React.FC = () => {
               setDeleteConfirmationId(null);
             }}>Evet, Sil</Button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!addPositionData} onClose={() => setAddPositionData(null)} title={`${addPositionData?.ticker} Ek Alım Yap`}>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-[var(--text-muted)] mb-2">Hissenin yeni maliyeti ve toplam lot sayısı ağırlıklı ortalama alınarak otomatik hesaplanacaktır.</p>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Eklenen Fiyat" type="number" step="0.01" value={addPositionData?.addedPrice || ''} onChange={e => setAddPositionData(prev => prev ? {...prev, addedPrice: Number(e.target.value)} : null)} />
+            <Input label="Eklenen Lot" type="number" value={addPositionData?.addedLot || ''} onChange={e => setAddPositionData(prev => prev ? {...prev, addedLot: Number(e.target.value)} : null)} />
+          </div>
+          <Input label="Eklenen Komisyon (İsteğe Bağlı)" type="number" step="0.01" value={addPositionData?.addedCommission || ''} onChange={e => setAddPositionData(prev => prev ? {...prev, addedCommission: Number(e.target.value)} : null)} />
+          
+          <Button onClick={handleAddPositionSave} className="mt-2" size="lg">Ortalamayı Güncelle</Button>
         </div>
       </Modal>
     </div>
