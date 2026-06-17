@@ -54,6 +54,11 @@ export const defaultUserData: UserData = {
   settings: defaultSettings
 };
 
+export interface IpoScenario {
+  participants: string;
+  lots: number;
+}
+
 export interface IpoData {
   id: string;
   ticker: string;
@@ -64,4 +69,6 @@ export interface IpoData {
   dateRange: string;
   prospectusUrl?: string;
   status: 'Yaklaşan' | 'İşlem Görüyor';
+  scenarios?: IpoScenario[];
+  finalLots?: number;
 }

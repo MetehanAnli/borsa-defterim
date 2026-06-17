@@ -51,3 +51,13 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

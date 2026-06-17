@@ -102,6 +102,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const tickersToFetch = new Set<string>();
       data.trades.filter(t => t.status === 'open').forEach(t => tickersToFetch.add(t.ticker));
       data.watchlist.forEach(w => tickersToFetch.add(w.ticker));
+      ipos.filter(i => i.status === 'İşlem Görüyor').forEach(i => tickersToFetch.add(i.ticker));
 
       if (tickersToFetch.size === 0) return;
 
@@ -130,7 +131,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Refresh every 60 seconds
     const interval = setInterval(fetchPrices, 60000);
     return () => clearInterval(interval);
-  }, [data.trades, data.watchlist, isLoading]);
+  }, [data.trades, data.watchlist, ipos, isLoading]);
 
   const loginWithGoogle = async () => {
     try {

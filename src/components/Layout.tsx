@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp, Rocket } from 'lucide-react';
+import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp, Rocket, Clock } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useData } from '../context/DataContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -131,7 +131,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       </div>
 
       {/* Footer */}
-      <footer className="w-full py-8 text-center mt-auto">
+      <footer className="w-full py-8 text-center mt-auto flex flex-col items-center gap-3">
+        <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-[11px] sm:text-xs px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 font-medium">
+          <Clock size={14} />
+          Veriler 15 dakika gecikmelidir
+        </div>
         <p className="text-[11px] font-semibold text-[var(--text-muted)] tracking-widest uppercase">
           Borsa Defterim © {new Date().getFullYear()} • Yatırım Tavsiyesi Değildir
         </p>
@@ -139,13 +143,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--bg-card)] border-t border-[var(--border-color)] pb-safe">
-        <div className="flex items-center justify-around p-2">
+        <div className="flex items-center overflow-x-auto hide-scrollbar p-2 gap-1 snap-x snap-mandatory">
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex flex-col items-center gap-1 p-2 min-w-[4rem] rounded-xl transition-colors",
+                "flex flex-col items-center justify-center gap-1 p-2 min-w-[4.5rem] shrink-0 snap-center rounded-xl transition-colors",
                 activeTab === tab.id ? "text-[#10b981]" : "text-[var(--text-muted)] hover:bg-[var(--bg-main)]"
               )}
             >
