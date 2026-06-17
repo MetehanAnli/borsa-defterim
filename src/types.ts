@@ -70,5 +70,5 @@ export interface IpoData {
   prospectusUrl?: string;
   status: 'Yaklaşan' | 'İşlem Görüyor';
   scenarios?: IpoScenario[];
-  finalLots?: number;
+  finalLots?: number | null;
 }

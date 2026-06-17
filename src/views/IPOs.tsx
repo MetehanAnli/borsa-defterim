@@ -42,14 +42,14 @@ export const IPOs: React.FC = () => {
   const [formData, setFormData] = useState<Omit<IpoData, 'id'>>({
     ticker: '', companyName: '', price: 0, lotAmount: 0, 
     distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan',
-    scenarios: [], finalLots: undefined
+    scenarios: [], finalLots: null
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await addIpo(formData);
     setShowForm(false);
-    setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan', scenarios: [], finalLots: undefined });
+    setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan', scenarios: [], finalLots: null });
   };
 
   const IpoCard = ({ ipo }: { ipo: IpoData }) => (
@@ -214,7 +214,7 @@ export const IPOs: React.FC = () => {
                     <input 
                       type="number" 
                       value={formData.finalLots || ''} 
-                      onChange={e => setFormData({...formData, finalLots: parseInt(e.target.value) || undefined})} 
+                      onChange={e => setFormData({...formData, finalLots: parseInt(e.target.value) || null})} 
                       className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 outline-none focus:border-primary w-full md:w-1/3" 
                       placeholder="Örn: 45" 
                     />
@@ -432,7 +432,7 @@ export const IPOs: React.FC = () => {
                         const updated = { 
                           ...selectedIpo, 
                           scenarios: adminScenarios, 
-                          finalLots: typeof adminFinalLots === 'number' ? adminFinalLots : undefined,
+                          finalLots: typeof adminFinalLots === 'number' ? adminFinalLots : null,
                           status: adminStatus
                         };
                         await updateIpo(updated);
