@@ -16,17 +16,23 @@
   }
 
   .dark {
-    --bg-main: #0f172a;
-    --bg-card: #1e293b;
+    --bg-main: #0b1121;
+    --bg-card: rgba(30, 41, 59, 0.4);
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
-    --border-color: #334155;
+    --border-color: rgba(255, 255, 255, 0.08);
   }
 
   body {
     background-color: var(--bg-main);
     color: var(--text-main);
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .dark body {
+    background-image: 
+      radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.12), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(59, 130, 246, 0.12), transparent 40%);
   }
 }
 

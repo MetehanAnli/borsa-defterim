@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { calculateProfitAmount, calculateProfitRatio } from '../utils/math';
 import { getMockLivePrice } from '../utils/demoData';
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 
 export const Analytics: React.FC = () => {
@@ -75,16 +75,22 @@ export const Analytics: React.FC = () => {
           <h3 className="font-semibold text-lg">Portföy Büyümesi (Gerçekleşen Kâr)</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={growthData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+              <AreaChart data={growthData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <defs>
+                  <linearGradient id="colorKumulatif" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} opacity={0.5} />
                 <XAxis dataKey="date" stroke={textColor} fontSize={12} tickMargin={10} />
                 <YAxis stroke={textColor} fontSize={12} tickFormatter={(val) => `₺${val}`} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '8px', color: 'var(--text-main)' }}
                   formatter={(value: number) => [`₺${value.toFixed(2)}`, 'Kümülatif Kâr']}
                 />
-                <Line type="monotone" dataKey="kümülatif" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: 'var(--bg-main)' }} activeDot={{ r: 6 }} />
-              </LineChart>
+                <Area type="monotone" dataKey="kümülatif" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorKumulatif)" activeDot={{ r: 6, strokeWidth: 0, fill: '#10b981' }} />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </Card>

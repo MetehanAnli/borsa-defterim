@@ -96,10 +96,13 @@ export const Trades: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-sm bg-[var(--bg-main)] p-3 rounded-xl">
+              <div className="grid grid-cols-3 gap-2 text-sm bg-[var(--bg-main)] p-3 rounded-xl">
                 <div className="flex flex-col"><span className="text-[var(--text-muted)] text-xs">Alış</span><span className="font-medium">{formatCurrency(trade.buyPrice)}</span></div>
+                <div className="flex flex-col items-center"><span className="text-[var(--text-muted)] text-xs">Hedef</span><span className="font-medium text-[#10b981]">{trade.targetPrice ? formatCurrency(trade.targetPrice) : '-'}</span></div>
                 <div className="flex flex-col items-end"><span className="text-[var(--text-muted)] text-xs">{isClosed ? 'Satış' : 'Güncel'}</span><span className="font-medium">{formatCurrency(livePrice)}</span></div>
+                
                 <div className="flex flex-col"><span className="text-[var(--text-muted)] text-xs">Lot</span><span className="font-medium">{trade.lot}</span></div>
+                <div className="flex flex-col items-center"><span className="text-[var(--text-muted)] text-xs">Stop</span><span className="font-medium text-[#f43f5e]">{trade.stopLoss ? formatCurrency(trade.stopLoss) : '-'}</span></div>
                 <div className="flex flex-col items-end">
                   <span className="text-[var(--text-muted)] text-xs">K/Z</span>
                   <span className={`font-bold ${isProfit ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}>

@@ -33,7 +33,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             <div className="w-9 h-9 rounded-xl bg-[#0f1115] dark:bg-white flex items-center justify-center text-white dark:text-[#0f1115] shadow-sm">
               <TrendingUp size={22} strokeWidth={2.5} />
             </div>
-            <span className="text-[22px] font-extrabold italic tracking-tight hidden sm:block">Borsa Defterim</span>
+            <span className="text-[22px] font-extrabold italic tracking-tight hidden sm:block bg-gradient-to-r from-[#10b981] to-[#3b82f6] bg-clip-text text-transparent drop-shadow-sm">Borsa Defterim</span>
           </div>
 
           {/* Desktop Nav */}

@@ -4,8 +4,9 @@ import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { calculateProfitAmount, calculateProfitRatio, formatCurrency, formatPercentage, calculateTotalProfitRatio, calculateAverageProfitRatio } from '../utils/math';
 import { getMockLivePrice } from '../utils/demoData';
-import { TrendingUp, TrendingDown, Wallet, DollarSign, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, DollarSign, Activity, PackageOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AnimatedNumber } from '../components/AnimatedNumber';
 
 export const Dashboard: React.FC = () => {
   const { data, livePrices } = useData();
@@ -37,8 +38,8 @@ export const Dashboard: React.FC = () => {
   const profitRatioTotal = calculateTotalProfitRatio(data.trades, (t) => getPrice(t, 0));
   const profitRatioAvg = calculateAverageProfitRatio(data.trades, (t) => getPrice(t, 0));
 
-  const MetricCard = ({ title, value, icon: Icon, trend, onToggle, toggleLabel }: any) => (
-    <Card className="relative overflow-hidden group">
+  const MetricCard = ({ title, rawValue, formatter, icon: Icon, trend, onToggle, toggleLabel }: any) => (
+    <Card className="relative overflow-hidden group h-full flex flex-col justify-center">
       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
         <Icon size={64} />
       </div>
@@ -54,22 +55,12 @@ export const Dashboard: React.FC = () => {
             </button>
           )}
         </div>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={value}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            className="text-2xl font-bold"
-          >
-            {value}
-          </motion.div>
-        </AnimatePresence>
+        <AnimatedNumber value={rawValue} formatter={formatter} className="text-3xl font-extrabold bg-gradient-to-r from-[var(--text-main)] to-[var(--text-muted)] bg-clip-text text-transparent" />
         {trend !== undefined && (
           <div className="flex items-center gap-1 mt-1">
             {trend > 0 ? <TrendingUp size={14} className="text-[#10b981]" /> : trend < 0 ? <TrendingDown size={14} className="text-[#f43f5e]" /> : null}
             <span className={`text-sm font-semibold ${trend > 0 ? 'text-[#10b981]' : trend < 0 ? 'text-[#f43f5e]' : 'text-[var(--text-muted)]'}`}>
-              {trend > 0 ? '+' : ''}{trend}%
+              {trend > 0 ? '+' : ''}{trend.toFixed(2)}%
             </span>
           </div>
         )}
@@ -78,34 +69,39 @@ export const Dashboard: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <motion.div 
+      initial="hidden" animate="visible" 
+      variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
+      className="flex flex-col gap-6"
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Portföy Değeri"
-          value={formatCurrency(portfolioValue)}
-          icon={Wallet}
-        />
-        <MetricCard
-          title="Net Kar/Zarar"
-          value={formatCurrency(profitMode === 'total' ? netProfitTotal : netProfitAvg)}
-          icon={DollarSign}
-          onToggle={() => setProfitMode(p => p === 'total' ? 'average' : 'total')}
-          toggleLabel={profitMode === 'total' ? 'TOTAL' : 'AVG'}
-        />
-        <MetricCard
-          title="Kar Oranı"
-          value={formatPercentage(profitMode === 'total' ? profitRatioTotal : profitRatioAvg)}
-          icon={Activity}
-          onToggle={() => setProfitMode(p => p === 'total' ? 'average' : 'total')}
-          toggleLabel={profitMode === 'total' ? 'TOTAL' : 'AVG'}
-          trend={profitMode === 'total' ? profitRatioTotal : profitRatioAvg}
-        />
-        <MetricCard
-          title="Temettü Geliri"
-          value={formatCurrency(totalDividends)}
-          icon={DollarSign}
-          toggleLabel={`${data.dividends.length} İşlem`}
-        />
+        <motion.div className="h-full" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+          <MetricCard title="Portföy Değeri" rawValue={portfolioValue} formatter={formatCurrency} icon={Wallet} />
+        </motion.div>
+        <motion.div className="h-full" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+          <MetricCard
+            title="Net Kar/Zarar"
+            rawValue={profitMode === 'total' ? netProfitTotal : netProfitAvg}
+            formatter={formatCurrency}
+            icon={DollarSign}
+            onToggle={() => setProfitMode(p => p === 'total' ? 'average' : 'total')}
+            toggleLabel={profitMode === 'total' ? 'TOTAL' : 'AVG'}
+          />
+        </motion.div>
+        <motion.div className="h-full" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+          <MetricCard
+            title="Kar Oranı"
+            rawValue={profitMode === 'total' ? profitRatioTotal : profitRatioAvg}
+            formatter={formatPercentage}
+            icon={Activity}
+            onToggle={() => setProfitMode(p => p === 'total' ? 'average' : 'total')}
+            toggleLabel={profitMode === 'total' ? 'TOTAL' : 'AVG'}
+            trend={profitMode === 'total' ? profitRatioTotal : profitRatioAvg}
+          />
+        </motion.div>
+        <motion.div className="h-full" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+          <MetricCard title="Temettü Geliri" rawValue={totalDividends} formatter={formatCurrency} icon={DollarSign} toggleLabel={`${data.dividends.length} İşlem`} />
+        </motion.div>
       </div>
 
       {data.settings.targetPortfolioValue > 0 && (
@@ -138,14 +134,20 @@ export const Dashboard: React.FC = () => {
                   <th className="px-4 py-3 rounded-l-lg">Hisse</th>
                   <th className="px-4 py-3">Maliyet</th>
                   <th className="px-4 py-3">Güncel</th>
+                  <th className="px-4 py-3">Hedef</th>
                   <th className="px-4 py-3 text-right rounded-r-lg">Kar/Zarar</th>
                 </tr>
               </thead>
               <tbody>
                 {openTrades.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-[var(--text-muted)]">
-                      Aktif pozisyon bulunmuyor.
+                    <td colSpan={5} className="px-4 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3 text-[var(--text-muted)]">
+                        <div className="w-16 h-16 rounded-full bg-[var(--bg-main)] flex items-center justify-center border border-[var(--border-color)]">
+                          <PackageOpen size={32} className="opacity-50" />
+                        </div>
+                        <p className="font-medium">Henüz aktif bir pozisyonunuz bulunmuyor.</p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -160,6 +162,7 @@ export const Dashboard: React.FC = () => {
                         <td className="px-4 py-3 font-semibold">{trade.ticker}</td>
                         <td className="px-4 py-3">{formatCurrency(trade.buyPrice)}</td>
                         <td className="px-4 py-3">{formatCurrency(livePrice)}</td>
+                        <td className="px-4 py-3 font-medium text-[#10b981]">{trade.targetPrice ? formatCurrency(trade.targetPrice) : '-'}</td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex flex-col items-end">
                             <span className={isProfit ? 'text-[#10b981] font-medium' : 'text-[#f43f5e] font-medium'}>
@@ -218,6 +221,6 @@ export const Dashboard: React.FC = () => {
           </div>
         </Card>
       </div>
-    </div>
+    </motion.div>
   );
 };
