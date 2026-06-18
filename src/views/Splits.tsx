@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '../components/Card';
 import { Layers, Plus, Share2, X, Calculator } from 'lucide-react';
 import { SplitEvent } from '../types';
@@ -6,12 +6,37 @@ import { toPng } from 'html-to-image';
 import { AutocompleteInput } from '../components/AutocompleteInput';
 import { BIST_STOCKS } from '../utils/bistStocks';
 
+const SPLITS_STORAGE_KEY = 'borsa_defterim_splits_data';
+
 export const Splits: React.FC = () => {
-  const [ticker, setTicker] = useState('ÖRNEK HİSSE');
-  const [startingLot, setStartingLot] = useState<number>(1);
-  const [events, setEvents] = useState<SplitEvent[]>([
-    { date: new Date().toISOString().split('T')[0], ratio: 100, newPrice: 0 }
-  ]);
+  const [ticker, setTicker] = useState(() => {
+    try {
+      const saved = localStorage.getItem(SPLITS_STORAGE_KEY);
+      return saved ? JSON.parse(saved).ticker || 'ÖRNEK HİSSE' : 'ÖRNEK HİSSE';
+    } catch { return 'ÖRNEK HİSSE'; }
+  });
+  
+  const [startingLot, setStartingLot] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(SPLITS_STORAGE_KEY);
+      return saved ? JSON.parse(saved).startingLot || 1 : 1;
+    } catch { return 1; }
+  });
+  
+  const [events, setEvents] = useState<SplitEvent[]>(() => {
+    try {
+      const saved = localStorage.getItem(SPLITS_STORAGE_KEY);
+      return saved && JSON.parse(saved).events ? JSON.parse(saved).events : [
+        { date: new Date().toISOString().split('T')[0], ratio: 100, newPrice: 0 }
+      ];
+    } catch { 
+      return [{ date: new Date().toISOString().split('T')[0], ratio: 100, newPrice: 0 }];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(SPLITS_STORAGE_KEY, JSON.stringify({ ticker, startingLot, events }));
+  }, [ticker, startingLot, events]);
 
   const captureRef = useRef<HTMLDivElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
