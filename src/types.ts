@@ -71,4 +71,23 @@ export interface IpoData {
   status: 'Yaklaşan' | 'İşlem Görüyor';
   scenarios?: IpoScenario[];
   finalLots?: number | null;
+  totalLotsForIndividuals?: number;
+  discountRate?: string;
+  prospectusSummary?: {
+    fundUsage?: string;
+    t1t2?: boolean;
+    priceStability?: string;
+  };
+}
+
+export interface SplitEvent {
+  date: string;
+  ratio: number; // e.g. 100 for %100, 300 for %300
+  newPrice: number;
+}
+
+export interface StockSplitMap {
+  id: string;
+  ticker: string;
+  events: SplitEvent[];
 }

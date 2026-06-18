@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp, Rocket, Clock } from 'lucide-react';
+import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp, Rocket, Clock, Layers } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useData } from '../context/DataContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -19,6 +19,7 @@ const TABS = [
   { id: 'dividends', label: 'Temettüler', icon: DollarSign },
   { id: 'watchlist', label: 'İzleme', icon: Eye },
   { id: 'ipos', label: 'Halka Arz', icon: Rocket },
+  { id: 'splits', label: 'Bölünmeler', icon: Layers },
   { id: 'analytics', label: 'Analiz', icon: LineChart },
   { id: 'settings', label: 'Ayarlar', icon: SettingsIcon },
 ];
@@ -100,7 +101,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         {/* Left Ad - Desktop Only */}
         <div className="hidden xl:block w-[160px] 2xl:w-[250px] shrink-0">
           <div className="sticky top-28">
-            <AdBanner orientation="vertical" />
+            <AdBanner key={`left-${activeTab}`} orientation="vertical" />
           </div>
         </div>
 
@@ -108,7 +109,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         <main className="flex-1 max-w-5xl min-w-0 flex flex-col gap-6">
           {/* Mobile Top Ad - Only on small screens */}
           <div className="block xl:hidden w-full">
-            <AdBanner orientation="horizontal" />
+            <AdBanner key={`top-${activeTab}`} orientation="horizontal" />
           </div>
 
           <motion.div
@@ -125,7 +126,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         {/* Right Ad - Desktop Only */}
         <div className="hidden xl:block w-[160px] 2xl:w-[250px] shrink-0">
           <div className="sticky top-28">
-            <AdBanner orientation="vertical" />
+            <AdBanner key={`right-${activeTab}`} orientation="vertical" />
           </div>
         </div>
       </div>

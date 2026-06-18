@@ -18,8 +18,15 @@ export const IPOs: React.FC = () => {
   const [adminFinalLots, setAdminFinalLots] = useState<number | ''>('');
   const [adminStatus, setAdminStatus] = useState<'Yaklaşan' | 'İşlem Görüyor'>('Yaklaşan');
   
+  const [adminTotalLots, setAdminTotalLots] = useState<number | ''>('');
+  const [adminDiscount, setAdminDiscount] = useState<string>('');
+  const [adminFundUsage, setAdminFundUsage] = useState<string>('');
+  const [adminT1T2, setAdminT1T2] = useState<boolean>(false);
+  const [adminPriceStability, setAdminPriceStability] = useState<string>('');
+  
   const captureRef = useRef<HTMLDivElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [customParticipants, setCustomParticipants] = useState<number>(1000000);
 
   const calculateCeilings = (price: number, lots: number) => {
     let days = [];
@@ -42,17 +49,18 @@ export const IPOs: React.FC = () => {
   const [formData, setFormData] = useState<Omit<IpoData, 'id'>>({
     ticker: '', companyName: '', price: 0, lotAmount: 0, 
     distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan',
-    scenarios: [], finalLots: null
+    scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '',
+    prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' }
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await addIpo(formData);
     setShowForm(false);
-    setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan', scenarios: [], finalLots: null });
+    setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
   };
 
-  const IpoCard = ({ ipo }: { ipo: IpoData }) => (
+  const IpoCard: React.FC<{ ipo: IpoData }> = ({ ipo }) => (
     <Card 
       onClick={() => setSelectedIpo(ipo)}
       className="flex flex-col gap-4 relative overflow-hidden group cursor-pointer hover:border-[#3b82f6]/50 transition-colors"
@@ -173,40 +181,25 @@ export const IPOs: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-col gap-1 md:col-span-3 mt-2 border-t border-[var(--border-color)] pt-3">
-                    <label className="text-xs font-bold text-[var(--text-muted)]">Senaryolar (Örn: 2 Milyon Kişi - 50 Lot)</label>
-                    {formData.scenarios?.map((scen, idx) => (
-                      <div key={idx} className="flex gap-2 mb-1">
-                        <input 
-                          value={scen.participants} 
-                          onChange={e => {
-                             const newScen = [...(formData.scenarios || [])];
-                             newScen[idx].participants = e.target.value;
-                             setFormData({...formData, scenarios: newScen});
-                          }} 
-                          placeholder="Örn: 2.5M Kişi"
-                          className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-1.5 text-sm flex-1 outline-none focus:border-primary"
-                        />
-                        <input 
-                          type="number"
-                          value={scen.lots || ''} 
-                          onChange={e => {
-                             const newScen = [...(formData.scenarios || [])];
-                             newScen[idx].lots = parseInt(e.target.value) || 0;
-                             setFormData({...formData, scenarios: newScen});
-                          }} 
-                          placeholder="Düşecek Lot"
-                          className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-1.5 text-sm flex-1 outline-none focus:border-primary"
-                        />
-                        <button type="button" onClick={() => {
-                             const newScen = [...(formData.scenarios || [])];
-                             newScen.splice(idx, 1);
-                             setFormData({...formData, scenarios: newScen});
-                        }} className="text-red-500 hover:bg-red-500/10 rounded p-1.5 px-3 font-bold transition-colors">Sil</button>
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => setFormData({...formData, scenarios: [...(formData.scenarios || []), {participants: '', lots: 0}]})} className="text-xs bg-[#3b82f6]/10 hover:bg-[#3b82f6]/20 text-[#3b82f6] rounded p-1.5 px-3 font-bold self-start mt-1 transition-colors">
-                      + Senaryo Ekle
-                    </button>
+                    <label className="text-xs font-bold text-[#3b82f6]">Bireysele Dağıtılacak Toplam Lot (Hesaplayıcı İçin)</label>
+                    <input type="number" value={formData.totalLotsForIndividuals || ''} onChange={e => setFormData({...formData, totalLotsForIndividuals: parseInt(e.target.value) || 0})} className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 outline-none focus:border-[#3b82f6] w-full md:w-1/3" placeholder="Örn: 25000000" />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-[var(--text-muted)]">İskonto Oranı</label>
+                    <input value={formData.discountRate || ''} onChange={e => setFormData({...formData, discountRate: e.target.value})} className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 outline-none focus:border-primary" placeholder="Örn: %20" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-[var(--text-muted)]">Fiyat İstikrarı</label>
+                    <input value={formData.prospectusSummary?.priceStability || ''} onChange={e => setFormData({...formData, prospectusSummary: {...(formData.prospectusSummary || {}), priceStability: e.target.value}})} className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 outline-none focus:border-primary" placeholder="Örn: 30 Gün Planlanıyor" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-4 md:mt-6">
+                    <input type="checkbox" id="t1t2" checked={formData.prospectusSummary?.t1t2 || false} onChange={e => setFormData({...formData, prospectusSummary: {...(formData.prospectusSummary || {}), t1t2: e.target.checked}})} className="w-4 h-4" />
+                    <label htmlFor="t1t2" className="text-sm font-bold text-[var(--text-muted)]">T1-T2 Bakiye Kullanılabilir mi?</label>
+                  </div>
+                  <div className="flex flex-col gap-1 md:col-span-3">
+                    <label className="text-xs font-bold text-[var(--text-muted)]">Fon Kullanım Yeri</label>
+                    <textarea value={formData.prospectusSummary?.fundUsage || ''} onChange={e => setFormData({...formData, prospectusSummary: {...(formData.prospectusSummary || {}), fundUsage: e.target.value}})} className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 outline-none focus:border-primary h-20" placeholder="Örn: %40 İşletme Sermayesi, %60 Yeni Yatırım" />
                   </div>
 
                   <div className="flex flex-col gap-1 md:col-span-3 mt-2 border-t border-[var(--border-color)] pt-3">
@@ -260,18 +253,34 @@ export const IPOs: React.FC = () => {
 
       <Modal 
         isOpen={!!selectedIpo} 
-        onClose={() => { setSelectedIpo(null); setSelectedScenarioIndex(0); setAdminEditMode(false); }} 
+        onClose={() => { setSelectedIpo(null); setSelectedScenarioIndex(0); setAdminEditMode(false); setCustomParticipants(1000000); }} 
         title={selectedIpo?.ticker || 'Halka Arz Detayı'}
       >
         {selectedIpo && (() => {
           const isFinalized = !!selectedIpo.finalLots;
-          const hasScenarios = selectedIpo.scenarios && selectedIpo.scenarios.length > 0;
+          const hasTotalLots = !!selectedIpo.totalLotsForIndividuals && selectedIpo.totalLotsForIndividuals > 0;
+          
+          const generatedScenarios = [];
+          if (hasTotalLots) {
+            for (let p = 600000; p <= 1200000; p += 100000) {
+              generatedScenarios.push({
+                participants: `${p >= 1000000 ? (p / 1000000).toFixed(1) + 'M' : (p / 1000) + 'B'} Kişi`,
+                lots: Math.floor(selectedIpo.totalLotsForIndividuals! / p)
+              });
+            }
+          }
+          
+          const displayScenarios = hasTotalLots ? generatedScenarios : (selectedIpo.scenarios || []);
+          const actualHasScenarios = displayScenarios.length > 0;
           
           let baseLot = 0;
           if (isFinalized) {
             baseLot = selectedIpo.finalLots!;
-          } else if (hasScenarios) {
-            baseLot = selectedIpo.scenarios![selectedScenarioIndex]?.lots || 0;
+          } else if (hasTotalLots && selectedScenarioIndex === -1) {
+            baseLot = Math.floor(selectedIpo.totalLotsForIndividuals! / customParticipants);
+          } else if (actualHasScenarios) {
+            const safeIdx = selectedScenarioIndex >= 0 && selectedScenarioIndex < displayScenarios.length ? selectedScenarioIndex : 0;
+            baseLot = displayScenarios[safeIdx]?.lots || 0;
           }
           
           const requiredAmount = baseLot * selectedIpo.price;
@@ -336,6 +345,11 @@ export const IPOs: React.FC = () => {
                       setAdminScenarios(selectedIpo.scenarios || []);
                       setAdminFinalLots(selectedIpo.finalLots || '');
                       setAdminStatus(selectedIpo.status);
+                      setAdminTotalLots(selectedIpo.totalLotsForIndividuals || '');
+                      setAdminDiscount(selectedIpo.discountRate || '');
+                      setAdminFundUsage(selectedIpo.prospectusSummary?.fundUsage || '');
+                      setAdminT1T2(selectedIpo.prospectusSummary?.t1t2 || false);
+                      setAdminPriceStability(selectedIpo.prospectusSummary?.priceStability || '');
                       setAdminEditMode(!adminEditMode);
                     }}
                     className="flex items-center gap-1.5 text-xs font-bold bg-[#3b82f6]/10 text-[#3b82f6] px-3 py-1.5 rounded-lg hover:bg-[#3b82f6]/20 transition-colors"
@@ -386,48 +400,33 @@ export const IPOs: React.FC = () => {
                   </div>
 
                   <div className="flex flex-col gap-2 border-t border-[var(--border-color)] pt-3">
-                    <label className="text-xs font-bold text-[var(--text-muted)]">Senaryolar</label>
-                    {adminScenarios.map((scen, idx) => (
-                      <div key={idx} className="flex gap-2">
-                        <input 
-                          value={scen.participants}
-                          onChange={e => {
-                            const newScen = [...adminScenarios];
-                            newScen[idx].participants = e.target.value;
-                            setAdminScenarios(newScen);
-                          }}
-                          placeholder="Örn: 1.5M Kişi"
-                          className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 text-sm flex-1 outline-none"
-                        />
-                        <input 
-                          type="number"
-                          value={scen.lots || ''}
-                          onChange={e => {
-                            const newScen = [...adminScenarios];
-                            newScen[idx].lots = parseInt(e.target.value) || 0;
-                            setAdminScenarios(newScen);
-                          }}
-                          placeholder="Lot"
-                          className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 text-sm w-24 outline-none"
-                        />
-                        <button 
-                          onClick={() => {
-                            const newScen = [...adminScenarios];
-                            newScen.splice(idx, 1);
-                            setAdminScenarios(newScen);
-                          }}
-                          className="text-red-500 hover:bg-red-500/10 px-3 rounded font-bold transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                    <button 
-                      onClick={() => setAdminScenarios([...adminScenarios, {participants: '', lots: 0}])}
-                      className="text-xs bg-[#10b981]/10 text-[#10b981] px-3 py-2 rounded-lg font-bold self-start mt-1 hover:bg-[#10b981]/20 transition-colors"
-                    >
-                      + Senaryo Ekle
-                    </button>
+                    <label className="text-xs font-bold text-[#3b82f6]">Bireysele Dağıtılacak Toplam Lot</label>
+                    <input 
+                      type="number" 
+                      value={adminTotalLots}
+                      onChange={e => setAdminTotalLots(e.target.value ? parseInt(e.target.value) : '')}
+                      className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 text-sm outline-none focus:border-[#3b82f6] w-full md:w-1/3"
+                      placeholder="Örn: 25000000"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[var(--border-color)] pt-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-[var(--text-muted)]">İskonto Oranı</label>
+                      <input value={adminDiscount} onChange={e => setAdminDiscount(e.target.value)} className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 outline-none focus:border-primary text-sm" placeholder="Örn: %20" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-[var(--text-muted)]">Fiyat İstikrarı</label>
+                      <input value={adminPriceStability} onChange={e => setAdminPriceStability(e.target.value)} className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 outline-none focus:border-primary text-sm" placeholder="Örn: 30 Gün Planlanıyor" />
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 md:col-span-2">
+                      <input type="checkbox" id="adminT1T2" checked={adminT1T2} onChange={e => setAdminT1T2(e.target.checked)} className="w-4 h-4" />
+                      <label htmlFor="adminT1T2" className="text-sm font-bold text-[var(--text-muted)]">T1-T2 Bakiye Kullanılabilir mi?</label>
+                    </div>
+                    <div className="flex flex-col gap-1 md:col-span-2">
+                      <label className="text-xs font-bold text-[var(--text-muted)]">Fon Kullanım Yeri</label>
+                      <textarea value={adminFundUsage} onChange={e => setAdminFundUsage(e.target.value)} className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 outline-none focus:border-primary h-20 text-sm" placeholder="Örn: %40 İşletme Sermayesi, %60 Yeni Yatırım" />
+                    </div>
                   </div>
 
                   <div className="flex justify-end pt-2 border-t border-[var(--border-color)]">
@@ -437,7 +436,14 @@ export const IPOs: React.FC = () => {
                           ...selectedIpo, 
                           scenarios: adminScenarios, 
                           finalLots: typeof adminFinalLots === 'number' ? adminFinalLots : null,
-                          status: adminStatus
+                          status: adminStatus,
+                          totalLotsForIndividuals: typeof adminTotalLots === 'number' ? adminTotalLots : undefined,
+                          discountRate: adminDiscount,
+                          prospectusSummary: {
+                            fundUsage: adminFundUsage,
+                            t1t2: adminT1T2,
+                            priceStability: adminPriceStability
+                          }
                         };
                         await updateIpo(updated);
                         setSelectedIpo(updated);
@@ -451,6 +457,34 @@ export const IPOs: React.FC = () => {
                 </div>
               )}
 
+              {/* Prospectus Badges */}
+              {(selectedIpo.discountRate || selectedIpo.prospectusSummary?.t1t2 || selectedIpo.prospectusSummary?.priceStability) && (
+                <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-bottom-4">
+                  {selectedIpo.discountRate && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                      <TrendingUp size={14} /> İskonto: {selectedIpo.discountRate}
+                    </div>
+                  )}
+                  {selectedIpo.prospectusSummary?.t1t2 && (
+                    <div className="bg-[#10b981]/10 border border-[#10b981]/30 text-[#10b981] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                      <Rocket size={14} /> T1-T2 Geçerli
+                    </div>
+                  )}
+                  {selectedIpo.prospectusSummary?.priceStability && (
+                    <div className="bg-[#3b82f6]/10 border border-[#3b82f6]/30 text-[#3b82f6] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                      <SettingsIcon size={14} /> Fiyat İstikrarı: {selectedIpo.prospectusSummary.priceStability}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedIpo.prospectusSummary?.fundUsage && (
+                <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-3 rounded-xl text-sm animate-in fade-in slide-in-from-bottom-4">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-1">Fon Kullanım Yeri</span>
+                  <p className="font-medium text-[var(--text-main)]">{selectedIpo.prospectusSummary.fundUsage}</p>
+                </div>
+              )}
+
               {!adminEditMode && isFinalized ? (
                 <div className="bg-[#10b981]/10 border border-[#10b981]/30 p-5 rounded-xl flex flex-col items-center justify-center gap-2">
                   <div className="flex items-center gap-2 text-[#10b981]">
@@ -460,15 +494,15 @@ export const IPOs: React.FC = () => {
                   <span className="text-4xl font-extrabold text-[#10b981]">{baseLot} Lot</span>
                   <span className="text-sm font-semibold text-[var(--text-muted)] bg-[var(--bg-card)] px-3 py-1 rounded-full">Gereken Tutar: ₺{requiredAmount.toFixed(2)}</span>
                 </div>
-              ) : hasScenarios ? (
+              ) : actualHasScenarios ? (
                 <div className={`p-4 rounded-xl border flex flex-col gap-3 ${isCapturing ? 'bg-[#0f172a] border-[#1e293b]' : 'bg-[var(--bg-main)] border-[var(--border-color)]'}`}>
                   <div className="flex items-center gap-2 text-lg font-bold">
                     <Users className="text-[#3b82f6]" size={20} />
                     <span className={isCapturing ? 'text-white' : ''}>Tahmini Katılım Senaryoları</span>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3">
-                    {selectedIpo.scenarios!.map((scen, idx) => {
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {displayScenarios.map((scen, idx) => {
                       const isSelected = selectedScenarioIndex === idx;
                       const reqAmt = scen.lots * selectedIpo.price;
                       
@@ -485,6 +519,41 @@ export const IPOs: React.FC = () => {
                       )
                     })}
                   </div>
+
+                  {hasTotalLots && !isCapturing && (
+                    <div className="mt-4 pt-4 border-t border-[var(--border-color)] flex flex-col gap-3">
+                      <div className="flex justify-between items-center">
+                         <span className="text-sm font-bold">Özel Katılım Tahmini</span>
+                         <span className="text-xs bg-[var(--bg-card)] px-2 py-1 rounded text-[var(--text-muted)] font-bold">
+                           {(customParticipants / 1000000).toFixed(2)}M Kişi
+                         </span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="300000" 
+                        max="4000000" 
+                        step="50000" 
+                        value={customParticipants} 
+                        onChange={e => {
+                          setCustomParticipants(parseInt(e.target.value));
+                          setSelectedScenarioIndex(-1);
+                        }}
+                        className="w-full accent-[#3b82f6]"
+                      />
+                      {selectedScenarioIndex === -1 && (
+                         <div className="flex justify-between items-center bg-[#3b82f6]/10 p-3 rounded-xl border border-[#3b82f6]/30 animate-in fade-in zoom-in-95">
+                           <div className="flex flex-col">
+                             <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase">Düşecek Lot</span>
+                             <span className="text-xl font-extrabold text-[#3b82f6]">{baseLot} Lot</span>
+                           </div>
+                           <div className="flex flex-col items-end">
+                             <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase">Gereken Tutar</span>
+                             <span className="text-lg font-extrabold text-[#10b981]">₺{(baseLot * selectedIpo.price).toFixed(2)}</span>
+                           </div>
+                         </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-[var(--bg-main)] p-4 rounded-xl border border-[var(--border-color)] text-center text-sm text-[var(--text-muted)] font-medium">

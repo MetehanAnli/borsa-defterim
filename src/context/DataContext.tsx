@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { UserData, defaultUserData, Trade, Dividend, WatchlistItem, IpoData } from '../types';
+import { UserData, defaultUserData, Trade, Dividend, WatchlistItem, IpoData, StockSplitMap } from '../types';
 import { generateDemoData } from '../utils/demoData';
 import { db } from '../utils/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
@@ -27,6 +27,10 @@ interface DataContextType {
   addIpo: (ipo: Omit<IpoData, 'id'>) => Promise<void>;
   updateIpo: (ipo: IpoData) => Promise<void>;
   deleteIpo: (id: string) => Promise<void>;
+  splits: StockSplitMap[];
+  addSplit: (split: Omit<StockSplitMap, 'id'>) => Promise<void>;
+  updateSplit: (split: StockSplitMap) => Promise<void>;
+  deleteSplit: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -55,6 +59,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
   const [livePrices, setLivePrices] = useState<Record<string, number>>({});
   const [ipos, setIpos] = useState<IpoData[]>([]);
+  const [splits, setSplits] = useState<StockSplitMap[]>([]);
 
   // Listen to IPOs from Firebase
   useEffect(() => {
@@ -72,6 +77,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.warn("Firebase not properly configured yet.");
     }
+  }, []);
+
+  // Listen to Splits from Firebase
+  useEffect(() => {
+    try {
+      const unsubscribe = onSnapshot(collection(db, 'splits'), (snapshot) => {
+        const splitList: StockSplitMap[] = [];
+        snapshot.forEach((docSnap) => {
+          splitList.push({ id: docSnap.id, ...docSnap.data() } as StockSplitMap);
+        });
+        setSplits(splitList);
+      }, (error) => {
+        console.error("Firebase Splits listener error:", error);
+      });
+      return () => unsubscribe();
+    } catch (e) {}
   }, []);
 
   // Load from local storage on mount
@@ -219,6 +240,31 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const addSplit = async (split: Omit<StockSplitMap, 'id'>) => {
+    try {
+      await addDoc(collection(db, 'splits'), split as any);
+    } catch (e) {
+      console.error("Error adding split", e);
+    }
+  };
+
+  const updateSplit = async (split: StockSplitMap) => {
+    try {
+      const { id, ...data } = split;
+      await updateDoc(doc(db, 'splits', id), data as any);
+    } catch (e) {
+      console.error("Error updating split", e);
+    }
+  };
+
+  const deleteSplit = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'splits', id));
+    } catch (e) {
+      console.error("Error deleting split", e);
+    }
+  };
+
   const updateTargetPortfolio = useCallback((target: number) => {
     setData(prev => ({
       ...prev,
@@ -252,7 +298,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateTargetPortfolio,
       injectDemoData, clearAllData,
       livePrices,
-      ipos, addIpo, updateIpo, deleteIpo
+      ipos, addIpo, updateIpo, deleteIpo,
+      splits, addSplit, updateSplit, deleteSplit
     }}>
       {children}
     </DataContext.Provider>
