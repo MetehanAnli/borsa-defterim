@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../context/DataContext';
 import { Card } from '../components/Card';
-import { Rocket, Plus, Trash2, Users, TrendingUp, Settings as SettingsIcon, Save, X, Share2 } from 'lucide-react';
+import { Rocket, Plus, Trash2, Users, TrendingUp, Settings as SettingsIcon, Save, X, Share2, Pencil } from 'lucide-react';
 import { IpoData, IpoScenario } from '../types';
 import { Modal } from '../components/Modal';
 import { toPng } from 'html-to-image';
@@ -12,6 +12,7 @@ export const IPOs: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedIpo, setSelectedIpo] = useState<IpoData | null>(null);
   const [selectedScenarioIndex, setSelectedScenarioIndex] = useState<number>(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   const [adminEditMode, setAdminEditMode] = useState(false);
   const [adminScenarios, setAdminScenarios] = useState<IpoScenario[]>([]);
@@ -55,8 +56,13 @@ export const IPOs: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addIpo(formData);
+    if (editingId) {
+      await updateIpo({ ...formData, id: editingId } as IpoData);
+    } else {
+      await addIpo(formData);
+    }
     setShowForm(false);
+    setEditingId(null);
     setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
   };
 
@@ -104,19 +110,44 @@ export const IPOs: React.FC = () => {
           <p className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Lot Miktarı</p>
           <p className="font-semibold text-sm">{ipo.lotAmount.toLocaleString('tr-TR')} Lot</p>
         </div>
-        <div className="col-span-2">
+        <div>
+          <p className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Arz Büyüklüğü</p>
+          <p className="font-semibold text-sm">{(ipo.lotAmount * ipo.price).toLocaleString('tr-TR')} ₺</p>
+        </div>
+        <div>
           <p className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Talep Toplama Tarihi</p>
           <p className="font-semibold text-sm">{ipo.dateRange}</p>
         </div>
       </div>
 
       {user && (
-        <button 
-          onClick={(e) => { e.stopPropagation(); deleteIpo(ipo.id); }} 
-          className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/40 transition-all"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 flex gap-2">
+          <button 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              setEditingId(ipo.id);
+              setFormData({
+                ticker: ipo.ticker, companyName: ipo.companyName, price: ipo.price, lotAmount: ipo.lotAmount, 
+                distributionType: ipo.distributionType, dateRange: ipo.dateRange, status: ipo.status,
+                scenarios: ipo.scenarios || [], finalLots: ipo.finalLots || null, totalLotsForIndividuals: ipo.totalLotsForIndividuals || 0, discountRate: ipo.discountRate || '',
+                prospectusSummary: ipo.prospectusSummary || { fundUsage: '', t1t2: false, priceStability: '' }
+              });
+              setShowForm(true);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }} 
+            className="p-2 bg-[#3b82f6]/20 text-[#3b82f6] rounded-lg hover:bg-[#3b82f6]/40 transition-all"
+            title="Düzenle"
+          >
+            <Pencil size={16} />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); deleteIpo(ipo.id); }} 
+            className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/40 transition-all"
+            title="Sil"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       )}
     </Card>
   );
@@ -131,7 +162,13 @@ export const IPOs: React.FC = () => {
           <p className="text-[var(--text-muted)] text-sm">Yaklaşan ve yeni işlem görmeye başlayan arzları takip edin.</p>
         </div>
         {user && (
-          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium">
+          <button onClick={() => {
+            if (!showForm) {
+              setEditingId(null);
+              setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
+            }
+            setShowForm(!showForm);
+          }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium">
             <Plus size={18} /> Yeni Ekle
           </button>
         )}
@@ -142,7 +179,7 @@ export const IPOs: React.FC = () => {
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
             <Card className="mb-6 border-[#3b82f6]/30">
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <h3 className="font-bold text-lg mb-2">Yeni Halka Arz Ekle (Admin)</h3>
+                <h3 className="font-bold text-lg mb-2">{editingId ? 'Halka Arzı Düzenle' : 'Yeni Halka Arz Ekle'} (Admin)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-bold text-[var(--text-muted)]">Hisse Kodu</label>
@@ -214,8 +251,12 @@ export const IPOs: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex justify-end gap-2 mt-4">
-                  <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded text-[var(--text-muted)] hover:bg-[var(--bg-main)]">İptal</button>
-                  <button type="submit" className="px-6 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 font-medium">Kaydet & Paylaş</button>
+                  <button type="button" onClick={() => {
+                    setShowForm(false);
+                    setEditingId(null);
+                    setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
+                  }} className="px-4 py-2 rounded text-[var(--text-muted)] hover:bg-[var(--bg-main)]">İptal</button>
+                  <button type="submit" className="px-6 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 font-medium">{editingId ? 'Güncelle' : 'Kaydet & Paylaş'}</button>
                 </div>
               </form>
             </Card>
