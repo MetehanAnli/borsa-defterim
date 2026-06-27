@@ -6,7 +6,9 @@ import { Dividends } from './views/Dividends';
 import { Watchlist } from './views/Watchlist';
 import { Analytics } from './views/Analytics';
 import { IPOs } from './views/IPOs';
+import { Funds } from './views/Funds';
 import { Splits } from './views/Splits';
+import { BalanceAnalyses } from './views/BalanceAnalyses';
 import { Settings } from './views/Settings';
 import { useData } from './context/DataContext';
 
@@ -29,7 +31,9 @@ function AppContent() {
       {activeTab === 'dividends' && <Dividends />}
       {activeTab === 'watchlist' && <Watchlist />}
       {activeTab === 'ipos' && <IPOs />}
+      {activeTab === 'funds' && <Funds />}
       {activeTab === 'splits' && <Splits />}
+      {activeTab === 'balance-analyses' && <BalanceAnalyses />}
       {activeTab === 'analytics' && <Analytics />}
       {activeTab === 'settings' && <Settings />}
     </Layout>

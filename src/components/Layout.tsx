@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp, Rocket, Clock, Layers } from 'lucide-react';
+import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp, Rocket, Clock, Layers, PieChart } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useData } from '../context/DataContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -19,8 +19,10 @@ const TABS = [
   { id: 'dividends', label: 'Temettüler', icon: DollarSign },
   { id: 'watchlist', label: 'İzleme', icon: Eye },
   { id: 'ipos', label: 'Halka Arz', icon: Rocket },
+  { id: 'funds', label: 'Fonlar', icon: PieChart },
   { id: 'splits', label: 'Bölünmeler', icon: Layers },
-  { id: 'analytics', label: 'Analiz', icon: LineChart },
+  { id: 'balance-analyses', label: 'Bilanço Analizleri', icon: LineChart },
+  { id: 'analytics', label: 'Performans', icon: LineChart },
   { id: 'settings', label: 'Ayarlar', icon: SettingsIcon },
 ];
 
