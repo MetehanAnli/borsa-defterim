@@ -237,15 +237,18 @@ const AnalysisForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       }
 
       // 2. Maksimum 2 kuralını uygula (Eskileri sil)
+      // Firestore index hatası almamak için orderBy'ı kaldırdık, hafızada sıralayacağız (Zaten en fazla 3 kayıt gelecek)
       const q = query(
         collection(db, 'bilanco_analizleri'), 
-        where('ticker', '==', upperTicker),
-        orderBy('timestamp', 'desc')
+        where('ticker', '==', upperTicker)
       );
       const snapshot = await getDocs(q);
       
       const existingDocs: any[] = [];
       snapshot.forEach(doc => existingDocs.push({ id: doc.id, ...doc.data() }));
+      
+      // Tarihe göre yeniden eskiye sırala
+      existingDocs.sort((a, b) => b.timestamp - a.timestamp);
       
       // Eğer zaten 2 (veya daha fazla) analiz varsa, sondakileri sil (sadece en yeni 1 taneyi bırak, yenisi eklenince 2 olacak)
       if (existingDocs.length >= 2) {
