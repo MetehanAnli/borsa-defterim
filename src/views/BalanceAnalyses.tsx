@@ -19,7 +19,10 @@ interface Analysis {
 export const BalanceAnalyses: React.FC = () => {
   const { user } = useData(); // Admin ise user dolu gelir
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('search') || '';
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);

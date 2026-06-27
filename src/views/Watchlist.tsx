@@ -8,7 +8,7 @@ import { Badge } from '../components/Badge';
 import { useCurrency } from '../context/CurrencyContext';
 import { getMockLivePrice } from '../utils/demoData';
 import { BIST_STOCKS } from '../utils/bistStocks';
-import { Plus, Trash2, Eye, Target } from 'lucide-react';
+import { Plus, Trash2, Eye, Target, BarChart2 } from 'lucide-react';
 import { WatchlistItem } from '../types';
 
 export const Watchlist: React.FC = () => {
@@ -69,9 +69,18 @@ export const Watchlist: React.FC = () => {
                 <Card key={item.id} hoverEffect className="flex flex-col gap-3 relative">
                   <div className="flex justify-between items-start">
                     <span className="font-bold text-xl">{item.ticker}</span>
-                    <button onClick={() => deleteWatchlistItem(item.id)} className="text-[var(--text-muted)] hover:text-[#f43f5e] transition-colors">
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex gap-2">
+                      <a 
+                        href={`/?tab=balance-analyses&search=${item.ticker}`}
+                        className="text-[var(--text-muted)] hover:text-[#10b981] transition-colors p-1"
+                        title={`${item.ticker} Bilanço Analizine Git`}
+                      >
+                        <BarChart2 size={16} />
+                      </a>
+                      <button onClick={() => deleteWatchlistItem(item.id)} className="text-[var(--text-muted)] hover:text-[#f43f5e] transition-colors p-1">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 text-sm">

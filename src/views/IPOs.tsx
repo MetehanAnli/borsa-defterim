@@ -1,15 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../context/DataContext';
-import { Card } from '../components/Card';
-import { Rocket, Plus, Trash2, Users, TrendingUp, Settings as SettingsIcon, Save, X, Share2, Pencil } from 'lucide-react';
-import { IpoData, IpoScenario } from '../types';
+import { Rocket, Plus, Trash2, Users, TrendingUp, Settings as SettingsIcon, Save, X, Share2, Pencil, CalendarDays, Calendar as CalendarIcon } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { toPng } from 'html-to-image';
 
 export const IPOs: React.FC = () => {
   const { ipos, user, addIpo, deleteIpo, updateIpo, livePrices } = useData();
   const [showForm, setShowForm] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedIpo, setSelectedIpo] = useState<IpoData | null>(null);
   const [selectedScenarioIndex, setSelectedScenarioIndex] = useState<number>(0);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -49,7 +48,7 @@ export const IPOs: React.FC = () => {
 
   const [formData, setFormData] = useState<Omit<IpoData, 'id'>>({
     ticker: '', companyName: '', price: 0, lotAmount: 0, 
-    distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan',
+    distributionType: 'Tamamı Eşit', dateRange: '', tradingDate: '', status: 'Yaklaşan',
     scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '',
     prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' }
   });
@@ -63,7 +62,7 @@ export const IPOs: React.FC = () => {
     }
     setShowForm(false);
     setEditingId(null);
-    setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
+    setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', tradingDate: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
   };
 
   const IpoCard: React.FC<{ ipo: IpoData }> = ({ ipo }) => (
@@ -114,10 +113,17 @@ export const IPOs: React.FC = () => {
           <p className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Arz Büyüklüğü</p>
           <p className="font-semibold text-sm">{(ipo.lotAmount * ipo.price).toLocaleString('tr-TR')} ₺</p>
         </div>
-        <div>
-          <p className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Talep Toplama Tarihi</p>
-          <p className="font-semibold text-sm">{ipo.dateRange}</p>
-        </div>
+        {ipo.tradingDate ? (
+          <div>
+            <p className="text-[10px] uppercase font-bold text-[var(--text-muted)]">İşleme Başlama Tarihi</p>
+            <p className="font-semibold text-sm text-[#10b981]">{ipo.tradingDate}</p>
+          </div>
+        ) : (
+          <div>
+            <p className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Talep Toplama Tarihi</p>
+            <p className="font-semibold text-sm">{ipo.dateRange}</p>
+          </div>
+        )}
       </div>
 
       {user && (
@@ -128,7 +134,7 @@ export const IPOs: React.FC = () => {
               setEditingId(ipo.id);
               setFormData({
                 ticker: ipo.ticker, companyName: ipo.companyName, price: ipo.price, lotAmount: ipo.lotAmount, 
-                distributionType: ipo.distributionType, dateRange: ipo.dateRange, status: ipo.status,
+                distributionType: ipo.distributionType, dateRange: ipo.dateRange, tradingDate: ipo.tradingDate || '', status: ipo.status,
                 scenarios: ipo.scenarios || [], finalLots: ipo.finalLots || null, totalLotsForIndividuals: ipo.totalLotsForIndividuals || 0, discountRate: ipo.discountRate || '',
                 prospectusSummary: ipo.prospectusSummary || { fundUsage: '', t1t2: false, priceStability: '' }
               });
@@ -165,7 +171,7 @@ export const IPOs: React.FC = () => {
           <button onClick={() => {
             if (!showForm) {
               setEditingId(null);
-              setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
+              setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', tradingDate: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
             }
             setShowForm(!showForm);
           }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium">
@@ -208,6 +214,10 @@ export const IPOs: React.FC = () => {
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-bold text-[var(--text-muted)]">Talep Toplama Tarihi</label>
                     <input required value={formData.dateRange} onChange={e => setFormData({...formData, dateRange: e.target.value})} className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded p-2 outline-none focus:border-primary" placeholder="14-15 Eylül" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-[var(--text-muted)] text-[#10b981]">İşleme Başlama Tarihi (Opsiyonel)</label>
+                    <input value={formData.tradingDate || ''} onChange={e => setFormData({...formData, tradingDate: e.target.value})} className="bg-[var(--bg-main)] border border-[#10b981]/50 rounded p-2 outline-none focus:border-[#10b981]" placeholder="Örn: 20 Eylül (İşleme Başlama)" />
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-bold text-[var(--text-muted)]">Durum</label>
@@ -254,7 +264,7 @@ export const IPOs: React.FC = () => {
                   <button type="button" onClick={() => {
                     setShowForm(false);
                     setEditingId(null);
-                    setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
+                    setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', tradingDate: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
                   }} className="px-4 py-2 rounded text-[var(--text-muted)] hover:bg-[var(--bg-main)]">İptal</button>
                   <button type="submit" className="px-6 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 font-medium">{editingId ? 'Güncelle' : 'Kaydet & Paylaş'}</button>
                 </div>
@@ -266,9 +276,17 @@ export const IPOs: React.FC = () => {
 
       <div className="flex flex-col gap-8">
         <div>
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2 border-b border-[var(--border-color)] pb-2">
-            <span className="w-2 h-2 rounded-full bg-[#3b82f6]"></span> Yaklaşan / Talep Toplananlar
-          </h3>
+          <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2 mb-4">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#3b82f6]"></span> Yaklaşan / Talep Toplananlar
+            </h3>
+            <button 
+              onClick={() => setIsCalendarOpen(true)}
+              className="flex items-center gap-2 text-sm font-bold text-[#8b5cf6] hover:text-[#7c3aed] transition-colors p-1"
+            >
+              <CalendarDays size={18} /> Takvim
+            </button>
+          </div>
           {upcomingIpos.length === 0 ? (
             <p className="text-[var(--text-muted)] text-sm">Şu anda SPK onaylı yeni bir halka arz bulunmuyor veya Firebase bağlantısı yapılmadı.</p>
           ) : (
@@ -498,6 +516,37 @@ export const IPOs: React.FC = () => {
                 </div>
               )}
 
+              {/* IPO Basic Details Summary */}
+              {!adminEditMode && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+                  <div className={`p-3 rounded-xl border flex flex-col justify-center ${isCapturing ? 'bg-[#1e293b] border-[#334155]' : 'bg-[var(--bg-card)] border-[var(--border-color)]'}`}>
+                    <p className={`text-[10px] uppercase font-bold ${isCapturing ? 'text-slate-400' : 'text-[var(--text-muted)]'}`}>Dağıtım</p>
+                    <p className={`font-semibold text-sm ${isCapturing ? 'text-white' : ''}`}>{selectedIpo.distributionType}</p>
+                  </div>
+                  <div className={`p-3 rounded-xl border flex flex-col justify-center ${isCapturing ? 'bg-[#1e293b] border-[#334155]' : 'bg-[var(--bg-card)] border-[var(--border-color)]'}`}>
+                    <p className={`text-[10px] uppercase font-bold ${isCapturing ? 'text-slate-400' : 'text-[var(--text-muted)]'}`}>Lot Miktarı</p>
+                    <p className={`font-semibold text-sm ${isCapturing ? 'text-white' : ''}`}>{selectedIpo.lotAmount.toLocaleString('tr-TR')}</p>
+                  </div>
+                  <div className={`p-3 rounded-xl border flex flex-col justify-center ${isCapturing ? 'bg-[#1e293b] border-[#334155]' : 'bg-[var(--bg-card)] border-[var(--border-color)]'}`}>
+                    <p className={`text-[10px] uppercase font-bold ${isCapturing ? 'text-slate-400' : 'text-[var(--text-muted)]'}`}>Arz Büyüklüğü</p>
+                    <p className={`font-semibold text-sm ${isCapturing ? 'text-white' : ''}`}>{(selectedIpo.lotAmount * selectedIpo.price).toLocaleString('tr-TR')} ₺</p>
+                  </div>
+                  <div className={`p-3 rounded-xl border flex flex-col justify-center ${isCapturing ? 'bg-[#1e293b] border-[#334155]' : 'bg-[var(--bg-card)] border-[var(--border-color)]'}`}>
+                    {selectedIpo.tradingDate ? (
+                      <>
+                        <p className="text-[10px] uppercase font-bold text-[#10b981]">İşlem Tarihi</p>
+                        <p className="font-semibold text-sm text-[#10b981]">{selectedIpo.tradingDate}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className={`text-[10px] uppercase font-bold ${isCapturing ? 'text-slate-400' : 'text-[var(--text-muted)]'}`}>Talep Toplama</p>
+                        <p className={`font-semibold text-sm ${isCapturing ? 'text-white' : ''}`}>{selectedIpo.dateRange}</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Prospectus Badges */}
               {(selectedIpo.discountRate || selectedIpo.prospectusSummary?.t1t2 || selectedIpo.prospectusSummary?.priceStability) && (
                 <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-bottom-4">
@@ -646,6 +695,43 @@ export const IPOs: React.FC = () => {
             </div>
           );
         })()}
+      </Modal>
+
+      {/* Takvim Modal */}
+      <Modal isOpen={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} title="Halka Arz Takvimi">
+        <div className="flex flex-col gap-4">
+          {upcomingIpos.length === 0 ? (
+            <p className="text-[var(--text-muted)] text-sm text-center py-4">Yaklaşan arz bulunmuyor.</p>
+          ) : (
+            upcomingIpos.map(ipo => (
+              <div 
+                key={ipo.id} 
+                onClick={() => { setIsCalendarOpen(false); setTimeout(() => setSelectedIpo(ipo), 200); }}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl hover:border-[#3b82f6] transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#3b82f6]/10 text-[#3b82f6] flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                    <CalendarIcon size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold group-hover:text-[#3b82f6] transition-colors">{ipo.ticker}</h4>
+                    <p className="text-xs text-[var(--text-muted)]">{ipo.companyName}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:items-end text-sm">
+                  {ipo.tradingDate ? (
+                    <span className="font-bold text-[#10b981]">{ipo.tradingDate}</span>
+                  ) : (
+                    <span className="font-bold text-[#3b82f6]">{ipo.dateRange}</span>
+                  )}
+                  <span className="text-xs text-[var(--text-muted)] uppercase font-semibold">
+                    {ipo.tradingDate ? 'İşleme Başlıyor' : 'Talep Toplama'}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </Modal>
     </div>
   );

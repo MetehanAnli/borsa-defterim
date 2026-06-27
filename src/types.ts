@@ -67,6 +67,7 @@ export interface IpoData {
   lotAmount: number;
   distributionType: string;
   dateRange: string;
+  tradingDate?: string;
   prospectusUrl?: string;
   status: 'Yaklaşan' | 'İşlem Görüyor';
   scenarios?: IpoScenario[];
