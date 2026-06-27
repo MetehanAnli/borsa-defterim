@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../context/DataContext';
+import { Card } from '../components/Card';
 import { Rocket, Plus, Trash2, Users, TrendingUp, Settings as SettingsIcon, Save, X, Share2, Pencil, CalendarDays, Calendar as CalendarIcon } from 'lucide-react';
+import { IpoData, IpoScenario } from '../types';
 import { Modal } from '../components/Modal';
 import { toPng } from 'html-to-image';
 
