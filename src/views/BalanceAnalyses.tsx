@@ -21,6 +21,7 @@ export const BalanceAnalyses: React.FC = () => {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Firestore'dan analizleri dinle
@@ -121,12 +122,11 @@ export const BalanceAnalyses: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredAnalyses.map(analysis => (
-            <Card key={analysis.id} className="flex flex-col overflow-hidden p-0 border border-[var(--border-color)] hover:border-[#8b5cf6]/50 transition-colors">
-              {analysis.imageUrl && (
-                <div className="w-full h-48 bg-[var(--bg-main)] relative border-b border-[var(--border-color)]">
-                  <img src={analysis.imageUrl} alt={analysis.ticker} className="w-full h-full object-cover" />
-                </div>
-              )}
+            <Card 
+              key={analysis.id} 
+              className="flex flex-col overflow-hidden p-0 border border-[var(--border-color)] hover:border-[#8b5cf6] cursor-pointer transition-colors"
+              onClick={() => setSelectedAnalysis(analysis)}
+            >
               <div className="p-5 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -137,7 +137,7 @@ export const BalanceAnalyses: React.FC = () => {
                   </div>
                   {user && (
                     <button 
-                      onClick={() => handleDelete(analysis)}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(analysis); }}
                       className="text-[var(--text-muted)] hover:text-red-500 transition-colors p-2 -mr-2 -mt-2"
                       title="Analizi Sil"
                     >
@@ -146,16 +146,22 @@ export const BalanceAnalyses: React.FC = () => {
                   )}
                 </div>
                 
-                <p className="text-[var(--text-muted)] text-sm whitespace-pre-wrap leading-relaxed mt-2">
+                <p className="text-[var(--text-muted)] text-sm line-clamp-3 leading-relaxed mt-1">
                   {analysis.content}
                 </p>
                 
-                <div className="mt-4 pt-4 border-t border-[var(--border-color)] text-xs text-[var(--text-muted)]">
+                <div className="text-xs text-[var(--text-muted)] font-medium mt-1">
                   {new Date(analysis.timestamp).toLocaleDateString('tr-TR', {
-                    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                    day: 'numeric', month: 'long', year: 'numeric'
                   })}
                 </div>
               </div>
+
+              {analysis.imageUrl && (
+                <div className="w-full h-48 bg-[var(--bg-main)] relative border-t border-[var(--border-color)]">
+                  <img src={analysis.imageUrl} alt={analysis.ticker} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                </div>
+              )}
             </Card>
           ))}
         </div>
@@ -170,6 +176,37 @@ export const BalanceAnalyses: React.FC = () => {
           <AnalysisForm onClose={() => setIsModalOpen(false)} />
         </Modal>
       )}
+
+      {/* Analiz Detay Modalı */}
+      <Modal
+        isOpen={!!selectedAnalysis}
+        onClose={() => setSelectedAnalysis(null)}
+        title={`${selectedAnalysis?.ticker} - ${selectedAnalysis?.title}`}
+      >
+        {selectedAnalysis && (
+          <div className="flex flex-col gap-5">
+            <p className="text-[var(--text-main)] text-sm whitespace-pre-wrap leading-relaxed bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-color)]">
+              {selectedAnalysis.content}
+            </p>
+            
+            {selectedAnalysis.imageUrl && (
+              <div className="w-full rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-main)] flex items-center justify-center">
+                <img 
+                  src={selectedAnalysis.imageUrl} 
+                  alt={selectedAnalysis.ticker} 
+                  className="w-full max-h-[70vh] object-contain" 
+                />
+              </div>
+            )}
+            
+            <div className="text-right text-xs text-[var(--text-muted)]">
+              Yayınlanma: {new Date(selectedAnalysis.timestamp).toLocaleDateString('tr-TR', {
+                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+              })}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
