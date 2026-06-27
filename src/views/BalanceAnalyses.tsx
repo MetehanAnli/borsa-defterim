@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../components/Card';
 import { Modal } from '../components/Modal';
-import { Search, Plus, Trash2, Image as ImageIcon, X, Loader2 } from 'lucide-react';
+import { Search, Plus, Trash2, Image as ImageIcon, X, Loader2, Share2, Check } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { db, storage } from '../utils/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDocs, where } from 'firebase/firestore';
@@ -23,6 +23,41 @@ export const BalanceAnalyses: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // URL'den seçili analizi al
+  useEffect(() => {
+    if (analyses.length > 0 && !selectedAnalysis) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('id');
+      if (id) {
+        const target = analyses.find(a => a.id === id);
+        if (target) setSelectedAnalysis(target);
+      }
+    }
+  }, [analyses]);
+
+  const handleSelect = (analysis: Analysis | null) => {
+    setSelectedAnalysis(analysis);
+    const url = new URL(window.location.href);
+    if (analysis) {
+      url.searchParams.set('tab', 'balance-analyses');
+      url.searchParams.set('id', analysis.id);
+    } else {
+      url.searchParams.delete('id');
+    }
+    window.history.pushState({}, '', url);
+  };
+
+  const handleShare = (e: React.MouseEvent, analysis: Analysis) => {
+    e.stopPropagation(); // Kartın tıklama olayını engelle
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', 'balance-analyses');
+    url.searchParams.set('id', analysis.id);
+    navigator.clipboard.writeText(url.toString());
+    setCopiedId(analysis.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   // Firestore'dan analizleri dinle
   useEffect(() => {
@@ -125,7 +160,7 @@ export const BalanceAnalyses: React.FC = () => {
             <Card 
               key={analysis.id} 
               className="flex flex-col overflow-hidden p-0 border border-[var(--border-color)] hover:border-[#8b5cf6] cursor-pointer transition-colors"
-              onClick={() => setSelectedAnalysis(analysis)}
+              onClick={() => handleSelect(analysis)}
             >
               <div className="p-5 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-4">
@@ -135,15 +170,24 @@ export const BalanceAnalyses: React.FC = () => {
                     </span>
                     <h3 className="font-bold text-lg leading-tight">{analysis.title}</h3>
                   </div>
-                  {user && (
+                  <div className="flex items-center gap-1 -mr-2 -mt-2">
                     <button 
-                      onClick={(e) => { e.stopPropagation(); handleDelete(analysis); }}
-                      className="text-[var(--text-muted)] hover:text-red-500 transition-colors p-2 -mr-2 -mt-2"
-                      title="Analizi Sil"
+                      onClick={(e) => handleShare(e, analysis)}
+                      className="text-[var(--text-muted)] hover:text-[#8b5cf6] transition-colors p-2"
+                      title="Linki Kopyala"
                     >
-                      <Trash2 size={16} />
+                      {copiedId === analysis.id ? <Check size={16} className="text-green-500" /> : <Share2 size={16} />}
                     </button>
-                  )}
+                    {user && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDelete(analysis); }}
+                        className="text-[var(--text-muted)] hover:text-red-500 transition-colors p-2"
+                        title="Analizi Sil"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
                 <p className="text-[var(--text-muted)] text-sm line-clamp-3 leading-relaxed mt-1">
@@ -180,7 +224,7 @@ export const BalanceAnalyses: React.FC = () => {
       {/* Analiz Detay Modalı */}
       <Modal
         isOpen={!!selectedAnalysis}
-        onClose={() => setSelectedAnalysis(null)}
+        onClose={() => handleSelect(null)}
         title={`${selectedAnalysis?.ticker} - ${selectedAnalysis?.title}`}
       >
         {selectedAnalysis && (

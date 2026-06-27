@@ -11,10 +11,19 @@ import { Splits } from './views/Splits';
 import { BalanceAnalyses } from './views/BalanceAnalyses';
 import { Settings } from './views/Settings';
 import { useData } from './context/DataContext';
-
 function AppContent() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialTab = urlParams.get('tab') || 'dashboard';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const { isLoading } = useData();
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    url.searchParams.delete('id'); // Sayfa değiştiğinde alt parametreleri temizle
+    window.history.pushState({}, '', url);
+  };
 
   if (isLoading) {
     return (
@@ -25,7 +34,7 @@ function AppContent() {
   }
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+    <Layout activeTab={activeTab} setActiveTab={handleTabChange}>
       {activeTab === 'dashboard' && <Dashboard />}
       {activeTab === 'trades' && <Trades />}
       {activeTab === 'dividends' && <Dividends />}
