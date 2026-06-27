@@ -5,6 +5,7 @@ import { Card } from '../components/Card';
 import { Rocket, Plus, Trash2, Users, TrendingUp, Settings as SettingsIcon, Save, X, Share2, Pencil, CalendarDays, Calendar as CalendarIcon } from 'lucide-react';
 import { IpoData, IpoScenario } from '../types';
 import { Modal } from '../components/Modal';
+import { IpoCalendar } from '../components/IpoCalendar';
 import { toPng } from 'html-to-image';
 
 export const IPOs: React.FC = () => {
@@ -700,40 +701,14 @@ export const IPOs: React.FC = () => {
       </Modal>
 
       {/* Takvim Modal */}
-      <Modal isOpen={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} title="Halka Arz Takvimi">
-        <div className="flex flex-col gap-4">
-          {upcomingIpos.length === 0 ? (
-            <p className="text-[var(--text-muted)] text-sm text-center py-4">Yaklaşan arz bulunmuyor.</p>
-          ) : (
-            upcomingIpos.map(ipo => (
-              <div 
-                key={ipo.id} 
-                onClick={() => { setIsCalendarOpen(false); setTimeout(() => setSelectedIpo(ipo), 200); }}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl hover:border-[#3b82f6] transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#3b82f6]/10 text-[#3b82f6] flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
-                    <CalendarIcon size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold group-hover:text-[#3b82f6] transition-colors">{ipo.ticker}</h4>
-                    <p className="text-xs text-[var(--text-muted)]">{ipo.companyName}</p>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:items-end text-sm">
-                  {ipo.tradingDate ? (
-                    <span className="font-bold text-[#10b981]">{ipo.tradingDate}</span>
-                  ) : (
-                    <span className="font-bold text-[#3b82f6]">{ipo.dateRange}</span>
-                  )}
-                  <span className="text-xs text-[var(--text-muted)] uppercase font-semibold">
-                    {ipo.tradingDate ? 'İşleme Başlıyor' : 'Talep Toplama'}
-                  </span>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+      <Modal isOpen={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} title="">
+        <IpoCalendar 
+          ipos={ipos} 
+          onIpoClick={(ipo) => { 
+            setIsCalendarOpen(false); 
+            setTimeout(() => setSelectedIpo(ipo), 200); 
+          }} 
+        />
       </Modal>
     </div>
   );
