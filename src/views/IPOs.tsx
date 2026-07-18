@@ -2,10 +2,11 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../context/DataContext';
 import { Card } from '../components/Card';
-import { Rocket, Plus, Trash2, Users, TrendingUp, Settings as SettingsIcon, Save, X, Share2, Pencil, CalendarDays, Calendar as CalendarIcon } from 'lucide-react';
+import { Rocket, Plus, Trash2, Users, TrendingUp, Settings as SettingsIcon, Save, X, Share2, Pencil, CalendarDays, Calendar as CalendarIcon, Download, RefreshCw, Check } from 'lucide-react';
 import { IpoData, IpoScenario } from '../types';
 import { Modal } from '../components/Modal';
 import { IpoCalendar } from '../components/IpoCalendar';
+import { scrapeHalkarz, ImportedIpo } from '../utils/halkarzScraper';
 import { toPng } from 'html-to-image';
 
 export const IPOs: React.FC = () => {
@@ -30,6 +31,52 @@ export const IPOs: React.FC = () => {
   const captureRef = useRef<HTMLDivElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [customParticipants, setCustomParticipants] = useState<number>(1000000);
+
+  // --- Halkarz.com içe aktarma ---
+  const [showImport, setShowImport] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importItems, setImportItems] = useState<(ImportedIpo & { exists: boolean; selected: boolean })[]>([]);
+  const [importSaving, setImportSaving] = useState(false);
+
+  const runHalkarzImport = async () => {
+    setShowImport(true);
+    setImportLoading(true);
+    setImportError(null);
+    setImportItems([]);
+    try {
+      const scraped = await scrapeHalkarz();
+      const existingTickers = new Set(ipos.map(i => i.ticker.toUpperCase()));
+      setImportItems(scraped.map(item => {
+        const exists = existingTickers.has(item.ticker.toUpperCase());
+        return { ...item, exists, selected: !exists }; // zaten varsa varsayılan seçili değil
+      }));
+    } catch (e: any) {
+      console.error('Halkarz import error', e);
+      setImportError(e?.message || 'Halkarz.com verisi çekilemedi. Daha sonra tekrar deneyin.');
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const saveSelectedImports = async () => {
+    const toAdd = importItems.filter(i => i.selected);
+    if (toAdd.length === 0) return;
+    setImportSaving(true);
+    try {
+      for (const item of toAdd) {
+        const { exists, selected, sourceUrl, ...ipoData } = item;
+        await addIpo(ipoData);
+      }
+      setShowImport(false);
+      setImportItems([]);
+    } catch (e) {
+      console.error('Halkarz save error', e);
+      setImportError('Kaydetme sırasında hata oluştu. Firebase bağlantısını kontrol edin.');
+    } finally {
+      setImportSaving(false);
+    }
+  };
 
   const calculateCeilings = (price: number, lots: number) => {
     let days = [];
@@ -171,15 +218,20 @@ export const IPOs: React.FC = () => {
           <p className="text-[var(--text-muted)] text-sm">Yaklaşan ve yeni işlem görmeye başlayan arzları takip edin.</p>
         </div>
         {user && (
-          <button onClick={() => {
-            if (!showForm) {
-              setEditingId(null);
-              setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', tradingDate: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
-            }
-            setShowForm(!showForm);
-          }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium">
-            <Plus size={18} /> Yeni Ekle
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={runHalkarzImport} className="flex items-center gap-2 px-4 py-2 bg-[#8b5cf6]/15 text-[#8b5cf6] rounded-lg hover:bg-[#8b5cf6]/25 font-medium border border-[#8b5cf6]/30" title="halkarz.com'dan güncel arzları çek">
+              <Download size={18} /> Halkarz'dan Çek
+            </button>
+            <button onClick={() => {
+              if (!showForm) {
+                setEditingId(null);
+                setFormData({ ticker: '', companyName: '', price: 0, lotAmount: 0, distributionType: 'Tamamı Eşit', dateRange: '', tradingDate: '', status: 'Yaklaşan', scenarios: [], finalLots: null, totalLotsForIndividuals: 0, discountRate: '', prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' } });
+              }
+              setShowForm(!showForm);
+            }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium">
+              <Plus size={18} /> Yeni Ekle
+            </button>
+          </div>
         )}
       </div>
 
@@ -702,13 +754,90 @@ export const IPOs: React.FC = () => {
 
       {/* Takvim Modal */}
       <Modal isOpen={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} title="">
-        <IpoCalendar 
-          ipos={ipos} 
-          onIpoClick={(ipo) => { 
-            setIsCalendarOpen(false); 
-            setTimeout(() => setSelectedIpo(ipo), 200); 
-          }} 
+        <IpoCalendar
+          ipos={ipos}
+          onIpoClick={(ipo) => {
+            setIsCalendarOpen(false);
+            setTimeout(() => setSelectedIpo(ipo), 200);
+          }}
         />
+      </Modal>
+
+      {/* Halkarz.com İçe Aktarma Modal */}
+      <Modal isOpen={showImport} onClose={() => !importSaving && setShowImport(false)} title="Halkarz.com'dan İçe Aktar">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--text-muted)]">
+              halkarz.com'daki güncel arzlar. Eklemek istediklerini seç, senaryo/lot gibi alanları sonra düzenleyebilirsin.
+            </p>
+            <button
+              onClick={runHalkarzImport}
+              disabled={importLoading}
+              className="flex items-center gap-1.5 text-xs font-bold text-[#8b5cf6] hover:text-[#7c3aed] disabled:opacity-50 shrink-0 ml-2"
+              title="Yeniden çek"
+            >
+              <RefreshCw size={14} className={importLoading ? 'animate-spin' : ''} /> Yenile
+            </button>
+          </div>
+
+          {importLoading && (
+            <div className="flex flex-col items-center justify-center py-10 gap-3 text-[var(--text-muted)]">
+              <RefreshCw size={28} className="animate-spin text-[#8b5cf6]" />
+              <span className="text-sm font-medium">Halkarz.com'dan çekiliyor...</span>
+            </div>
+          )}
+
+          {importError && !importLoading && (
+            <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-3 rounded-lg text-sm font-medium">
+              {importError}
+            </div>
+          )}
+
+          {!importLoading && !importError && importItems.length === 0 && (
+            <p className="text-sm text-[var(--text-muted)] text-center py-8">Sonuç bulunamadı.</p>
+          )}
+
+          {!importLoading && importItems.length > 0 && (
+            <div className="flex flex-col gap-2 max-h-[55vh] overflow-y-auto pr-1">
+              {importItems.map((item, idx) => (
+                <button
+                  key={item.sourceUrl || idx}
+                  onClick={() => setImportItems(prev => prev.map((it, i) => i === idx ? { ...it, selected: !it.selected } : it))}
+                  className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${item.selected ? 'bg-[#8b5cf6]/10 border-[#8b5cf6]' : 'bg-[var(--bg-main)] border-[var(--border-color)] hover:border-[#8b5cf6]/40'}`}
+                >
+                  <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 border ${item.selected ? 'bg-[#8b5cf6] border-[#8b5cf6]' : 'border-[var(--border-color)]'}`}>
+                    {item.selected && <Check size={14} className="text-white" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold">{item.ticker}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${item.status === 'Yaklaşan' ? 'bg-[#3b82f6]/20 text-[#3b82f6]' : 'bg-[#10b981]/20 text-[#10b981]'}`}>{item.status}</span>
+                      {item.exists && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400">Zaten var</span>}
+                    </div>
+                    <p className="text-xs text-[var(--text-muted)] truncate">{item.companyName}</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                      ₺{item.price.toFixed(2)} · {item.lotAmount.toLocaleString('tr-TR')} lot · {item.tradingDate || item.dateRange}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!importLoading && importItems.length > 0 && (
+            <div className="flex justify-end gap-2 border-t border-[var(--border-color)] pt-3">
+              <button onClick={() => setShowImport(false)} disabled={importSaving} className="px-4 py-2 rounded text-[var(--text-muted)] hover:bg-[var(--bg-main)] disabled:opacity-50">İptal</button>
+              <button
+                onClick={saveSelectedImports}
+                disabled={importSaving || importItems.filter(i => i.selected).length === 0}
+                className="flex items-center gap-2 px-6 py-2 bg-[#8b5cf6] text-white rounded hover:bg-[#8b5cf6]/90 font-medium disabled:opacity-50"
+              >
+                {importSaving ? <RefreshCw size={16} className="animate-spin" /> : <Download size={16} />}
+                Seçilenleri Ekle ({importItems.filter(i => i.selected).length})
+              </button>
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );

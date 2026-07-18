@@ -24,6 +24,11 @@ export default defineConfig(({mode}) => {
           target: 'https://query1.finance.yahoo.com',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api\/finance/, '')
+        },
+        '/api/halkarz': {
+          target: 'https://halkarz.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/halkarz/, '')
         }
       }
     },
