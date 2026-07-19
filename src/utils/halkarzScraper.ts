@@ -1,4 +1,4 @@
-import { IpoData } from '../types';
+import { IpoData, IpoScenario } from '../types';
 
 // halkarz.com'dan halka arz verisi çeker.
 // Tarayıcı CORS engeli nedeniyle doğrudan halkarz.com'a istek atamaz; bu yüzden
@@ -66,6 +66,52 @@ function textOf(el: Element | null | undefined): string {
   return (el?.textContent || '').replace(/\s+/g, ' ').trim();
 }
 
+// Bir <p> içindeki <br> ile ayrılmış satırları, kaynak dipnotunu (<small>) atarak
+// ve baştaki "- " işaretini temizleyerek dizi olarak döndürür.
+function linesOf(p: Element | null | undefined): string[] {
+  if (!p) return [];
+  const clone = p.cloneNode(true) as Element;
+  clone.querySelectorAll('small').forEach((s) => s.remove());
+  return clone.innerHTML
+    .split(/<br\s*\/?>/i)
+    .map((seg) => seg.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim())
+    .map((seg) => seg.split(/\s\*/)[0].trim()) // satır içi "* ..." dipnotunu at
+    .map((seg) => seg.replace(/^[-–—]\s*/, '').trim())
+    .filter((seg) => seg && !seg.startsWith('*'));
+}
+
+// İzahname Özeti bölümündeki <li><h5>Etiket</h5><p>...</p></li> öğelerini
+// { etiket(lowercase) -> <p> } eşlemesine çevirir.
+function buildSummaryMap(doc: Document): Record<string, Element> {
+  const map: Record<string, Element> = {};
+  Array.from(doc.querySelectorAll('li')).forEach((li) => {
+    const h5 = li.querySelector('h5');
+    const p = li.querySelector('p');
+    if (h5 && p) map[textOf(h5).toLocaleLowerCase('tr')] = p;
+  });
+  return map;
+}
+
+const findSummary = (map: Record<string, Element>, keyword: string): Element | null => {
+  const kw = keyword.toLocaleLowerCase('tr');
+  const key = Object.keys(map).find((k) => k.includes(kw));
+  return key ? map[key] : null;
+};
+
+// "150 Bin katılım ~ 341 Lot (11935 TL)." satırlarını IpoScenario'ya çevirir.
+function parseScenarios(lines: string[]): IpoScenario[] {
+  const out: IpoScenario[] = [];
+  for (const line of lines) {
+    const idx = line.toLocaleLowerCase('tr').indexOf('katıl');
+    const lotMatch = line.match(/([\d.,]+)\s*Lot/i);
+    if (idx <= 0 || !lotMatch) continue;
+    const participants = line.slice(0, idx).trim();
+    const lots = Math.round(parseTrNumber(lotMatch[1]));
+    if (participants && lots > 0) out.push({ participants, lots });
+  }
+  return out;
+}
+
 // Detay tablosundaki "Etiket : değer" satırından değeri bulur.
 function findRowValue(rows: HTMLTableRowElement[], labelKeyword: string): string {
   const kw = labelKeyword.toLocaleLowerCase('tr');
@@ -107,7 +153,23 @@ async function parseDetail(sourceUrl: string, fallback: Partial<ImportedIpo>): P
   const distributionType = mapDistribution(findRowValue(rows, 'dağıtım'));
   const dateRange = findRowValue(rows, 'halka arz tarihi') || fallback.dateRange || '';
   const tradingDate = findRowValue(rows, 'ilk işlem tarihi') || findRowValue(rows, 'işlem tarihi') || '';
-  const totalLotsForIndividuals = findRetailLots(doc);
+
+  // İzahname Özeti bölümü (fon kullanımı, iskonto, fiyat istikrarı, tahsisat, senaryolar)
+  const summary = buildSummaryMap(doc);
+
+  const fundUsage = linesOf(findSummary(summary, 'fonun kullanım yeri')).join('\n');
+  const discountRate = (linesOf(findSummary(summary, 'iskonto'))[0] || '').replace(/\.$/, '').trim();
+  const priceStability = (linesOf(findSummary(summary, 'fiyat istikrar'))[0] || '').replace(/\.$/, '').trim();
+
+  // Bireysele dağıtılacak lot: önce kesinleşen dağıtım tablosu, yoksa Tahsisat Grupları.
+  const tahsisatLines = linesOf(findSummary(summary, 'tahsisat'));
+  const tahsisatRetail = tahsisatLines.find((l) =>
+    l.toLocaleLowerCase('tr').includes('yurt içi bireysel')
+  );
+  const totalLotsForIndividuals = findRetailLots(doc) || parseTrNumber(tahsisatRetail);
+
+  // Olası dağıtım senaryoları (totalLotsForIndividuals boşsa yedek olarak kullanılır)
+  const scenarios = parseScenarios(linesOf(findSummary(summary, 'dağıtılacak pay')));
 
   // İzahname (KAP) linki
   const prospectusLink = Array.from(doc.querySelectorAll('a')).find((a) =>
@@ -130,12 +192,12 @@ async function parseDetail(sourceUrl: string, fallback: Partial<ImportedIpo>): P
     dateRange,
     tradingDate: tradingDate || '',
     status,
-    scenarios: [],
+    scenarios,
     finalLots: null,
     totalLotsForIndividuals,
-    discountRate: '',
+    discountRate,
     prospectusUrl,
-    prospectusSummary: { fundUsage: '', t1t2: false, priceStability: '' },
+    prospectusSummary: { fundUsage, t1t2: false, priceStability },
     sourceUrl,
   };
 }
