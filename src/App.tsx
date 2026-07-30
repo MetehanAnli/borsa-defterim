@@ -10,6 +10,7 @@ import { Funds } from './views/Funds';
 import { Splits } from './views/Splits';
 import { BalanceAnalyses } from './views/BalanceAnalyses';
 import { Settings } from './views/Settings';
+import { AiAnalysis } from './views/AiAnalysis';
 import { useData } from './context/DataContext';
 function AppContent() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -44,6 +45,7 @@ function AppContent() {
       {activeTab === 'splits' && <Splits />}
       {activeTab === 'balance-analyses' && <BalanceAnalyses />}
       {activeTab === 'analytics' && <Analytics />}
+      {activeTab === 'ai-analysis' && <AiAnalysis />}
       {activeTab === 'settings' && <Settings />}
     </Layout>
   );

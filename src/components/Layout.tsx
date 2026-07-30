@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp, Rocket, Clock, Layers, PieChart } from 'lucide-react';
+import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp, Rocket, Clock, Layers, PieChart, Sparkles } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useData } from '../context/DataContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -23,6 +23,7 @@ const TABS = [
   { id: 'splits', label: 'Bölünmeler', icon: Layers },
   { id: 'balance-analyses', label: 'Bilançolar', icon: LineChart },
   { id: 'analytics', label: 'Performans', icon: LineChart },
+  { id: 'ai-analysis', label: 'AI Analiz', icon: Sparkles, adminOnly: true },
   { id: 'settings', label: 'Ayarlar', icon: SettingsIcon },
 ];
 
@@ -30,6 +31,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   const { theme, toggleTheme } = useTheme();
   const { user, loginWithGoogle, logout } = useData();
   const { currency, toggleCurrency } = useCurrency();
+
+  const visibleTabs = TABS.filter((tab) => !tab.adminOnly || user);
 
   return (
     <div className="min-h-screen flex flex-col pb-20 md:pb-0">
@@ -44,7 +47,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {TABS.map(tab => (
+            {visibleTabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -147,7 +150,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--bg-card)] border-t border-[var(--border-color)] pb-safe">
         <div className="flex items-center overflow-x-auto hide-scrollbar p-2 gap-1 snap-x snap-mandatory">
-          {TABS.map(tab => (
+          {visibleTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
