@@ -1,7 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
 
-// Görsel okuyup yorum üretebilen, ucuz ve ücretsiz kotası olan model.
-export const GEMINI_MODEL = 'gemini-2.5-flash';
+// Görsel okuyup yorum üretebilen, en ucuz ve ücretsiz kotası olan model.
+// "-latest" aliası kullanılır ki sürüm kapatıldığında (deprecation) bozulmasın.
+export const GEMINI_MODEL = 'gemini-flash-lite-latest';
 
 // Kullanıcının istediği analiz tarzının birebir örneği (few-shot altın standart).
 const STYLE_EXAMPLE = `#TURSG | 2026/6 Finansal Görünüm
@@ -108,6 +109,7 @@ export async function generateFinancialAnalysis(input: AnalysisInput): Promise<s
     config: {
       systemInstruction: SYSTEM_PROMPT,
       temperature: 0.9, // yaratıcı/renkli üslup için
+      maxOutputTokens: 4096, // maliyet güvencesi + uzun analiz için yeterli alan
     },
   });
 
