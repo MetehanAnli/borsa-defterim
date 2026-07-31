@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card } from '../components/Card';
 import { useData } from '../context/DataContext';
-import { Sparkles, Upload, Copy, Check, RefreshCw, Trash2, KeyRound, Lock, ExternalLink, AlertCircle } from 'lucide-react';
+import { Sparkles, Upload, Copy, Check, RefreshCw, Trash2, KeyRound, Lock, ExternalLink, AlertCircle, Send, CheckCircle2, LineChart } from 'lucide-react';
 import { generateFinancialAnalysis, GEMINI_MODEL } from '../utils/geminiAnalysis';
+import { db, storage } from '../utils/firebase';
+import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 
 const API_KEY_STORAGE = 'bd-gemini-key';
 
@@ -24,6 +27,15 @@ export const AiAnalysis: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+
+  // Bilançolar'da yayınlama
+  const [showPublish, setShowPublish] = useState(false);
+  const [pubTicker, setPubTicker] = useState('');
+  const [pubTitle, setPubTitle] = useState('');
+  const [includeImage, setIncludeImage] = useState(true);
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [published, setPublished] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -108,6 +120,66 @@ export const AiAnalysis: React.FC = () => {
     setImagePreview(null);
     setImageBase64(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Analiz metninin ilk satırından ("#TURSG | 2026/6 Finansal Görünüm") kod ve başlığı çıkar
+  const extractMeta = (text: string) => {
+    const first = text.split('\n').find((l) => l.trim()) || '';
+    const m = first.match(/#?\s*([A-Za-zÇĞİÖŞÜçğıöşü0-9]{2,6})\s*\|\s*(.+)/);
+    return { ticker: (m?.[1] || '').toUpperCase(), title: (m?.[2] || '').trim() };
+  };
+
+  const openPublish = () => {
+    const meta = extractMeta(result);
+    setPubTicker(meta.ticker);
+    setPubTitle(meta.title || 'Finansal Analiz');
+    setPublishError(null);
+    setShowPublish(true);
+  };
+
+  const publishToBilanco = async () => {
+    if (!pubTicker.trim()) { setPublishError('Hisse kodu gerekli.'); return; }
+    setPublishing(true);
+    setPublishError(null);
+    try {
+      const upperTicker = pubTicker.toUpperCase().trim();
+      let uploadedUrl: string | null = null;
+
+      // Fintables görselini Storage'a yükle (mevcut Bilançolar akışıyla aynı)
+      if (includeImage && imagePreview) {
+        const ext = (imageMime.split('/')[1] || 'png').replace('jpeg', 'jpg');
+        const storageRef = ref(storage, `bilancolar/${upperTicker}_${Date.now()}.${ext}`);
+        await uploadString(storageRef, imagePreview, 'data_url');
+        uploadedUrl = await getDownloadURL(storageRef);
+      }
+
+      // Hisse başına en fazla 2 kayıt: en yeni 1'i tut, gerisini sil
+      const snap = await getDocs(query(collection(db, 'bilanco_analizleri'), where('ticker', '==', upperTicker)));
+      const existing: any[] = [];
+      snap.forEach((d) => existing.push({ id: d.id, ...d.data() }));
+      existing.sort((a, b) => b.timestamp - a.timestamp);
+      for (const d of existing.slice(1)) {
+        if (d.imageUrl) { try { await deleteObject(ref(storage, d.imageUrl)); } catch {} }
+        await deleteDoc(doc(db, 'bilanco_analizleri', d.id));
+      }
+
+      await addDoc(collection(db, 'bilanco_analizleri'), {
+        ticker: upperTicker,
+        title: pubTitle.trim() || 'Finansal Analiz',
+        content: result,
+        imageUrl: uploadedUrl,
+        timestamp: Date.now(),
+      });
+
+      setShowPublish(false);
+      setPublished(true);
+      setTimeout(() => setPublished(false), 5000);
+    } catch (e: any) {
+      console.error('Bilanço yayınlama hatası', e);
+      setPublishError('Yayınlanamadı: ' + (e?.message || e));
+    } finally {
+      setPublishing(false);
+    }
   };
 
   if (!user) {
@@ -224,12 +296,15 @@ export const AiAnalysis: React.FC = () => {
         <Card className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 font-bold"><Sparkles size={18} className="text-[#10b981]" /> Analiz Sonucu</div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button onClick={runAnalysis} disabled={loading} className="flex items-center gap-1.5 text-xs font-bold text-[#8b5cf6] hover:bg-[#8b5cf6]/10 px-3 py-1.5 rounded-lg disabled:opacity-50">
                 <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Yeniden Üret
               </button>
               <button onClick={copyResult} className="flex items-center gap-1.5 text-xs font-bold bg-[#10b981]/10 text-[#10b981] px-3 py-1.5 rounded-lg hover:bg-[#10b981]/20">
                 {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? 'Kopyalandı' : 'Kopyala'}
+              </button>
+              <button onClick={openPublish} className="flex items-center gap-1.5 text-xs font-bold bg-[#8b5cf6]/10 text-[#8b5cf6] px-3 py-1.5 rounded-lg hover:bg-[#8b5cf6]/20">
+                <LineChart size={14} /> Bilançolar'da Yayınla
               </button>
             </div>
           </div>
@@ -240,6 +315,47 @@ export const AiAnalysis: React.FC = () => {
             spellCheck={false}
           />
           <p className="text-xs text-[var(--text-muted)]">Metni düzenleyip kopyalayabilirsin. Paylaşırken Fintables görselini de eklemeyi unutma. ⚠️ Yatırım tavsiyesi değildir.</p>
+
+          {published && (
+            <div className="bg-[#10b981]/10 border border-[#10b981]/30 text-[#10b981] p-3 rounded-lg text-sm font-medium flex items-center gap-2">
+              <CheckCircle2 size={16} /> Bilançolar sekmesinde yayınlandı. Herkes görebilir.
+            </div>
+          )}
+
+          {showPublish && (
+            <div className="bg-[var(--bg-main)] border-2 border-dashed border-[#8b5cf6] rounded-xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2 font-bold text-sm"><LineChart size={16} className="text-[#8b5cf6]" /> Bilançolar'da Yayınla</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-[var(--text-muted)]">Hisse Kodu</label>
+                  <input value={pubTicker} onChange={(e) => setPubTicker(e.target.value.toUpperCase())} maxLength={6} placeholder="TURSG" className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-2 outline-none focus:border-[#8b5cf6] uppercase text-sm" />
+                </div>
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-xs font-bold text-[var(--text-muted)]">Başlık</label>
+                  <input value={pubTitle} onChange={(e) => setPubTitle(e.target.value)} placeholder="Örn: 2026/6 Finansal Görünüm" className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-2 outline-none focus:border-[#8b5cf6] text-sm" />
+                </div>
+              </div>
+              {imagePreview && (
+                <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                  <input type="checkbox" checked={includeImage} onChange={(e) => setIncludeImage(e.target.checked)} className="w-4 h-4 accent-[#8b5cf6]" />
+                  Fintables görselini karta ekle
+                </label>
+              )}
+              {publishError && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-2.5 rounded-lg text-sm font-medium flex items-start gap-2">
+                  <AlertCircle size={15} className="shrink-0 mt-0.5" /> {publishError}
+                </div>
+              )}
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowPublish(false)} disabled={publishing} className="px-4 py-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-card)] text-sm disabled:opacity-50">İptal</button>
+                <button onClick={publishToBilanco} disabled={publishing || !pubTicker.trim()} className="flex items-center gap-2 px-5 py-2 bg-[#8b5cf6] text-white rounded-lg font-bold hover:bg-[#8b5cf6]/90 disabled:opacity-50 text-sm">
+                  {publishing ? <RefreshCw size={15} className="animate-spin" /> : <Send size={15} />}
+                  {publishing ? 'Yayınlanıyor...' : 'Yayınla'}
+                </button>
+              </div>
+              <p className="text-xs text-[var(--text-muted)]">Not: Aynı hisse için en fazla 2 analiz tutulur; en eskisi otomatik silinir (mevcut Bilançolar kuralı).</p>
+            </div>
+          )}
         </Card>
       )}
     </div>
