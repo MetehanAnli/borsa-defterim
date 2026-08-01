@@ -34,6 +34,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
   const visibleTabs = TABS.filter((tab) => !tab.adminOnly || user);
 
+  // AdSense politikası: reklamlar yalnızca gerçek yayıncı içeriği olan sayfalarda gösterilir.
+  // Araç/portföy/ayar ekranlarında ve yöneticiye (kendi kendine tıklama riski) reklam gösterilmez.
+  const AD_CONTENT_TABS = ['ipos', 'balance-analyses'];
+  const showAds = !user && AD_CONTENT_TABS.includes(activeTab);
+
   return (
     <div className="min-h-screen flex flex-col pb-20 md:pb-0">
       <header className="sticky top-0 z-40 w-full border-b border-[var(--border-color)] bg-[var(--bg-main)]/80 backdrop-blur-md">
@@ -103,19 +108,23 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       {/* Desktop Main Content Area with Ads */}
       <div className="flex-1 container mx-auto px-4 py-8 max-w-[1600px] flex justify-center gap-6">
         
-        {/* Left Ad - Desktop Only */}
-        <div className="hidden xl:block w-[160px] 2xl:w-[250px] shrink-0">
-          <div className="sticky top-28">
-            <AdBanner key={`left-${activeTab}`} orientation="vertical" />
+        {/* Left Ad - Desktop Only, sadece içerik sayfalarında */}
+        {showAds && (
+          <div className="hidden xl:block w-[160px] 2xl:w-[250px] shrink-0">
+            <div className="sticky top-28">
+              <AdBanner key={`left-${activeTab}`} orientation="vertical" />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Main Content */}
         <main className="flex-1 max-w-5xl min-w-0 flex flex-col gap-6">
-          {/* Mobile Top Ad - Only on small screens */}
-          <div className="block xl:hidden w-full">
-            <AdBanner key={`top-${activeTab}`} orientation="horizontal" />
-          </div>
+          {/* Mobile Top Ad - sadece içerik sayfalarında */}
+          {showAds && (
+            <div className="block xl:hidden w-full">
+              <AdBanner key={`top-${activeTab}`} orientation="horizontal" />
+            </div>
+          )}
 
           <motion.div
             key={activeTab}
@@ -128,12 +137,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
           </motion.div>
         </main>
 
-        {/* Right Ad - Desktop Only */}
-        <div className="hidden xl:block w-[160px] 2xl:w-[250px] shrink-0">
-          <div className="sticky top-28">
-            <AdBanner key={`right-${activeTab}`} orientation="vertical" />
+        {/* Right Ad - Desktop Only, sadece içerik sayfalarında */}
+        {showAds && (
+          <div className="hidden xl:block w-[160px] 2xl:w-[250px] shrink-0">
+            <div className="sticky top-28">
+              <AdBanner key={`right-${activeTab}`} orientation="vertical" />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Footer */}
@@ -141,6 +152,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-[11px] sm:text-xs px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 font-medium">
           <Clock size={14} />
           Veriler 15 dakika gecikmelidir
+        </div>
+        <div className="flex items-center gap-4 flex-wrap justify-center text-xs font-medium text-[var(--text-muted)]">
+          <button onClick={() => setActiveTab('about')} className="hover:text-[#8b5cf6] transition-colors">Hakkında</button>
+          <span className="opacity-30">•</span>
+          <button onClick={() => setActiveTab('privacy')} className="hover:text-[#8b5cf6] transition-colors">Gizlilik Politikası</button>
+          <span className="opacity-30">•</span>
+          <button onClick={() => setActiveTab('contact')} className="hover:text-[#8b5cf6] transition-colors">İletişim</button>
         </div>
         <p className="text-[11px] font-semibold text-[var(--text-muted)] tracking-widest uppercase">
           Borsa Defterim © {new Date().getFullYear()} • Yatırım Tavsiyesi Değildir

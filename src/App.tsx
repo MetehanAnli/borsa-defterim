@@ -11,6 +11,7 @@ import { Splits } from './views/Splits';
 import { BalanceAnalyses } from './views/BalanceAnalyses';
 import { Settings } from './views/Settings';
 import { AiAnalysis } from './views/AiAnalysis';
+import { PrivacyPolicy, About, Contact } from './views/InfoPages';
 import { useData } from './context/DataContext';
 function AppContent() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -47,6 +48,9 @@ function AppContent() {
       {activeTab === 'analytics' && <Analytics />}
       {activeTab === 'ai-analysis' && <AiAnalysis />}
       {activeTab === 'settings' && <Settings />}
+      {activeTab === 'privacy' && <PrivacyPolicy />}
+      {activeTab === 'about' && <About />}
+      {activeTab === 'contact' && <Contact />}
     </Layout>
   );
 }
