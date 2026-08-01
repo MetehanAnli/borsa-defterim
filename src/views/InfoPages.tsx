@@ -3,7 +3,7 @@ import { Card } from '../components/Card';
 import { Shield, Info, Mail, TrendingUp } from 'lucide-react';
 
 // ÖNEMLİ: Buraya kendi gerçek iletişim e-postanı yaz (AdSense çalışan bir iletişim ister).
-export const CONTACT_EMAIL = 'ygzars0@gmail.com';
+export const CONTACT_EMAIL = 'metehananli@gmail.com';
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="flex flex-col gap-2">
