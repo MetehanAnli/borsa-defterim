@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '../components/Card';
 import { Modal } from '../components/Modal';
-import { Search, Plus, Trash2, Image as ImageIcon, X, Loader2, Share2, Check } from 'lucide-react';
+import { Search, Plus, Trash2, Image as ImageIcon, X, Loader2, Share2, Check, ArrowUpDown } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { db, storage } from '../utils/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDocs, where } from 'firebase/firestore';
@@ -49,6 +49,8 @@ export const BalanceAnalyses: React.FC = () => {
   const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'newest' | 'score-desc' | 'score-asc' | 'ticker'>('newest');
+  const [scoreFilter, setScoreFilter] = useState<'all' | 'strong' | 'medium' | 'weak'>('all');
 
   // URL'den seçili analizi al
   useEffect(() => {
@@ -102,10 +104,33 @@ export const BalanceAnalyses: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const filteredAnalyses = analyses.filter(a => 
-    a.ticker.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAnalyses = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    let list = analyses.filter(a =>
+      a.ticker.toLowerCase().includes(q) || a.title.toLowerCase().includes(q)
+    );
+    if (scoreFilter !== 'all') {
+      list = list.filter(a => {
+        if (typeof a.score !== 'number') return false;
+        if (scoreFilter === 'strong') return a.score >= 80;
+        if (scoreFilter === 'medium') return a.score >= 50 && a.score < 80;
+        return a.score < 50; // weak
+      });
+    }
+    const sorted = [...list];
+    if (sortBy === 'score-desc') sorted.sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+    else if (sortBy === 'score-asc') sorted.sort((a, b) => (a.score ?? 101) - (b.score ?? 101));
+    else if (sortBy === 'ticker') sorted.sort((a, b) => a.ticker.localeCompare(b.ticker, 'tr'));
+    else sorted.sort((a, b) => b.timestamp - a.timestamp); // newest
+    return sorted;
+  }, [analyses, searchQuery, scoreFilter, sortBy]);
+
+  const scoreChips: { id: typeof scoreFilter; label: string }[] = [
+    { id: 'all', label: 'Tümü' },
+    { id: 'strong', label: '🟢 Güçlü 80+' },
+    { id: 'medium', label: '🟡 Orta 50-79' },
+    { id: 'weak', label: '🔴 Zayıf <50' },
+  ];
 
   const handleDelete = async (analysis: Analysis) => {
     if (!confirm('Bu analizi silmek istediğinize emin misiniz?')) return;
@@ -162,6 +187,39 @@ export const BalanceAnalyses: React.FC = () => {
           )}
         </div>
       </div>
+
+      {!isLoading && analyses.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            {scoreChips.map(c => (
+              <button
+                key={c.id}
+                onClick={() => setScoreFilter(c.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                  scoreFilter === c.id
+                    ? 'bg-[#8b5cf6] text-white border-[#8b5cf6]'
+                    : 'bg-[var(--bg-card)] text-[var(--text-muted)] border-[var(--border-color)] hover:border-[#8b5cf6]/50'
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <ArrowUpDown size={16} className="text-[var(--text-muted)]" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#8b5cf6]"
+            >
+              <option value="newest">En Yeni</option>
+              <option value="score-desc">Skor (Yüksek → Düşük)</option>
+              <option value="score-asc">Skor (Düşük → Yüksek)</option>
+              <option value="ticker">Hisse (A-Z)</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-20">
