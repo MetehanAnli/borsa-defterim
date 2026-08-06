@@ -13,8 +13,30 @@ interface Analysis {
   title: string;
   content: string;
   imageUrl?: string;
+  score?: number | null;
   timestamp: number;
 }
+
+const scoreColor = (s: number) =>
+  s >= 80
+    ? 'bg-[#10b981]/15 text-[#10b981] border-[#10b981]/30'
+    : s >= 65
+    ? 'bg-[#3b82f6]/15 text-[#3b82f6] border-[#3b82f6]/30'
+    : s >= 50
+    ? 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30'
+    : 'bg-red-500/15 text-red-500 border-red-500/30';
+
+const ScoreBadge: React.FC<{ score: number; size?: 'sm' | 'lg' }> = ({ score, size = 'sm' }) => (
+  <div
+    className={`inline-flex items-baseline gap-0.5 font-extrabold rounded-lg border ${scoreColor(score)} ${
+      size === 'lg' ? 'px-3 py-1.5 text-xl' : 'px-2 py-0.5 text-sm'
+    }`}
+    title="Borsa Defterim Skoru (100 üzerinden)"
+  >
+    {score}
+    <span className="text-[0.55em] font-bold opacity-70">/100</span>
+  </div>
+);
 
 export const BalanceAnalyses: React.FC = () => {
   const { user } = useData(); // Admin ise user dolu gelir
@@ -167,10 +189,13 @@ export const BalanceAnalyses: React.FC = () => {
             >
               <div className="p-5 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="inline-block bg-[#8b5cf6]/10 text-[#8b5cf6] text-xs font-extrabold px-2.5 py-1 rounded-lg mb-2">
-                      {analysis.ticker}
-                    </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className="inline-block bg-[#8b5cf6]/10 text-[#8b5cf6] text-xs font-extrabold px-2.5 py-1 rounded-lg">
+                        {analysis.ticker}
+                      </span>
+                      {typeof analysis.score === 'number' && <ScoreBadge score={analysis.score} />}
+                    </div>
                     <h3 className="font-bold text-lg leading-tight">{analysis.title}</h3>
                   </div>
                   <div className="flex items-center gap-1 -mr-2 -mt-2">
@@ -232,6 +257,15 @@ export const BalanceAnalyses: React.FC = () => {
       >
         {selectedAnalysis && (
           <div className="flex flex-col gap-5">
+            {typeof selectedAnalysis.score === 'number' && (
+              <div className="flex items-center gap-3 bg-[var(--bg-card)] p-3 rounded-xl border border-[var(--border-color)]">
+                <ScoreBadge score={selectedAnalysis.score} size="lg" />
+                <div>
+                  <p className="font-bold text-sm">Borsa Defterim Skoru</p>
+                  <p className="text-xs text-[var(--text-muted)]">Yapay zekânın 100 üzerinden genel değerlendirmesi</p>
+                </div>
+              </div>
+            )}
             <p className="text-[var(--text-main)] text-sm whitespace-pre-wrap leading-relaxed bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-color)]">
               {selectedAnalysis.content}
             </p>
@@ -265,6 +299,7 @@ const AnalysisForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [ticker, setTicker] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [score, setScore] = useState<string>('');
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -358,6 +393,7 @@ const AnalysisForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         title,
         content,
         imageUrl: uploadedUrl || null,
+        score: score.trim() === '' ? null : Math.max(0, Math.min(100, parseInt(score, 10))),
         timestamp: Date.now()
       });
 
@@ -406,6 +442,19 @@ const AnalysisForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           required
           rows={6}
           className="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-xl px-4 py-2 focus:outline-none focus:border-[#8b5cf6] resize-none"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Skor (Opsiyonel, 0-100)</label>
+        <input
+          type="number"
+          min={0}
+          max={100}
+          value={score}
+          onChange={(e) => setScore(e.target.value)}
+          placeholder="Örn: 85"
+          className="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-xl px-4 py-2 focus:outline-none focus:border-[#8b5cf6]"
         />
       </div>
 

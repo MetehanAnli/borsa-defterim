@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card } from '../components/Card';
 import { useData } from '../context/DataContext';
 import { Sparkles, Upload, Copy, Check, RefreshCw, Trash2, KeyRound, Lock, ExternalLink, AlertCircle, Send, CheckCircle2, LineChart } from 'lucide-react';
-import { generateFinancialAnalysis, GEMINI_MODEL } from '../utils/geminiAnalysis';
+import { generateFinancialAnalysis, extractScore, GEMINI_MODEL } from '../utils/geminiAnalysis';
 import { db, storage } from '../utils/firebase';
 import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
@@ -168,6 +168,7 @@ export const AiAnalysis: React.FC = () => {
         title: pubTitle.trim() || 'Finansal Analiz',
         content: result,
         imageUrl: uploadedUrl,
+        score: extractScore(result),
         timestamp: Date.now(),
       });
 

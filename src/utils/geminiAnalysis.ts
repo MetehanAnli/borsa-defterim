@@ -55,6 +55,16 @@ const STYLE_EXAMPLE = `#TURSG | 2026/6 Finansal Görünüm
 TURSG, yatırımcısına "Benim devasa bir pazar payım var, milyarlarca lira prim üretiyorum, kasamda 111 milyar TL nakit var ve kârımı her çeyrek istikrarlı şekilde artırıyorum" diyen, tablo gibi bir bilanço açıklamış. Borsadaki spekülatif köpüklerin patladığı günlerde paranın sığınacağı en korunaklı kalelerden biridir.
 🎯 Yatırımcıya Not:
 Eğer portföyünüzde büyüme sancısı çeken, borçla boğuşan ve "bir gün uçacak" umuduyla beklediğiniz yüksek çarpanlı hayal kırıklıkları varsa; TURSG o hayallerin değil, rasyonel gerçeklerin hissesidir. 6,66 TL fiyatı ve 5,63 F/K oranıyla temel analizin tam kalbinde yer alır. Düşüşlerde toplanacak, portföyün defansif ve güçlü "temettü/değer" omurgasını oluşturacak birinci sınıf bir bilançodur.
+
+🏆 Borsa Defterim Skoru: 92/100
+
+* Kârlılık: 24/25
+* Büyüme: 19/20
+* Bilanço Sağlamlığı & Nakit: 19/20
+* Değerleme (Ucuzluk): 18/20
+* Momentum & İstikrar: 12/15
+
+💬 Skor Yorumu: Devasa nakit pozisyonu, kusursuz kârlılık trendi ve ucuz çarpanlarıyla ortalamanın çok üzerinde, defansif ve güçlü bir bilanço.
 #borsa #borsaistanbul #hisse #finans #bilanço #analiz #yatırım #bist #bist100 #piyasa
 ⚠️ Yatırım tavsiyesi değildir.
 📊 Görsel Fintables platformundan alınmıştır.`;
@@ -75,7 +85,14 @@ KURALLAR:
 - Sayıları Türkçe yaz (6,66 TL; 133,0 milyar TL; %30). Artış için 🔺, azalış için 🔻 kullan.
 - Şirketin sektörüne göre (sigorta, banka, sanayi, enerji, perakende vb.) başlık alt-notlarını ve yorumları uyarla. Bölüm başlıklarındaki tırnak içi ifadeleri ("Kârlılıkta Şov" gibi) şirkete özel yeniden yaz.
 - Üslup: renkli, metaforlu, iddialı ama akıcı ve profesyonel Türkçe. Örnekteki tonu birebir taklit et.
-- Metnin sonuna örnektekine benzer hashtag satırını, "⚠️ Yatırım tavsiyesi değildir." ve "📊 Görsel Fintables platformundan alınmıştır." satırlarını mutlaka ekle.
+- Hashtag satırından hemen ÖNCE mutlaka bir "🏆 Borsa Defterim Skoru: XX/100" bölümü ekle ve altına alt kriter puanlarını yaz. Puanlama, incelenen tüm verileri bütünsel değerlendirir. Kriterler ve maksimum puanlar:
+  * Kârlılık: 25 (net kâr, marjlar, kâr artışı)
+  * Büyüme: 20 (hasılat/prim/ciro artışı, iş hacmi)
+  * Bilanço Sağlamlığı & Nakit: 20 (borçluluk, özkaynak, nakit pozisyonu, likidite)
+  * Değerleme (Ucuzluk): 20 (F/K, PD/DD gibi çarpanların kârlılığa göre ucuz/pahalı olması)
+  * Momentum & İstikrar: 15 (çeyreklik trendlerin istikrarı, kârlılıkta süreklilik)
+  Toplam 100'dür; alt puanların toplamı ana skora eşit olmalı. Skoru gerçekçi ver: zayıf/riskli bilançolara düşük, güçlü olanlara yüksek puan. Altına 1 cümlelik "💬 Skor Yorumu" ekle.
+- En sona örnektekine benzer hashtag satırını, "⚠️ Yatırım tavsiyesi değildir." ve "📊 Görsel Fintables platformundan alınmıştır." satırlarını mutlaka ekle.
 - SADECE analiz metnini döndür; başında/sonunda açıklama, kod bloğu veya "İşte analiz" gibi ifadeler yazma.
 
 === İSTENEN TARZ (ÖRNEK) ===
@@ -87,6 +104,16 @@ export interface AnalysisInput {
   base64: string; // görselin base64 verisi (data: öneki olmadan)
   mimeType: string;
   extraInstruction?: string;
+}
+
+// Analiz metnindeki "🏆 Borsa Defterim Skoru: 92/100" ifadesinden skoru çeker.
+export function extractScore(text: string): number | null {
+  const m =
+    text.match(/skoru?\s*[:：]?\s*(\d{1,3})\s*\/\s*100/i) ||
+    text.match(/(\d{1,3})\s*\/\s*100/);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  return n >= 0 && n <= 100 ? n : null;
 }
 
 export async function generateFinancialAnalysis(input: AnalysisInput): Promise<string> {
