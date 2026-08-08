@@ -71,7 +71,7 @@ Eğer portföyünüzde büyüme sancısı çeken, borçla boğuşan ve "bir gün
 
 💬 Skor Yorumu: Devasa nakit pozisyonu, kusursuz kârlılık trendi ve ucuz çarpanlarıyla ortalamanın çok üzerinde, defansif ve güçlü bir bilanço.
 
-#borsa #borsaistanbul #hisse #finans #bilanço #analiz #yatırım #bist #bist100 #piyasa
+#borsa #hisse #bilanço #analiz #bist
 
 ⚠️ Yatırım tavsiyesi değildir.
 📊 Görsel Fintables platformundan alınmıştır.`;
@@ -99,7 +99,7 @@ KURALLAR:
   * Değerleme (Ucuzluk): 20 (F/K, PD/DD gibi çarpanların kârlılığa göre ucuz/pahalı olması)
   * Momentum & İstikrar: 15 (çeyreklik trendlerin istikrarı, kârlılıkta süreklilik)
   Toplam 100'dür; alt puanların toplamı ana skora eşit olmalı. Skoru gerçekçi ver: zayıf/riskli bilançolara düşük, güçlü olanlara yüksek puan. Altına 1 cümlelik "💬 Skor Yorumu" ekle.
-- En sona örnektekine benzer hashtag satırını, "⚠️ Yatırım tavsiyesi değildir." ve "📊 Görsel Fintables platformundan alınmıştır." satırlarını mutlaka ekle.
+- En sona SADECE şu kısa etiket satırını ekle (fazla etiket koyma): "#borsa #hisse #bilanço #analiz #bist". Ardından "⚠️ Yatırım tavsiyesi değildir." ve "📊 Görsel Fintables platformundan alınmıştır." satırlarını mutlaka ekle.
 - BOŞLUK DÜZENİ (çok önemli): Örnekteki boşluk düzenini birebir uygula. Her ana bölüm başlığından (📌 📈 📊 🧾 📉 ✅ ⚠️ 🔍 🎯 🏆) önce TAM OLARAK bir boş satır bırak. Her "💬 Yorum"/paragraf ile sonraki bölüm başlığı arasına bir boş satır koy. Madde listelerinin (*) içinde boş satır olmasın. Arka arkaya birden fazla boş satır kullanma.
 - SADECE analiz metnini döndür; başında/sonunda açıklama, kod bloğu veya "İşte analiz" gibi ifadeler yazma.
 

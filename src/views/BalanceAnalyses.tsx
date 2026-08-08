@@ -32,8 +32,7 @@ const XLogo: React.FC<{ size?: number }> = ({ size = 14 }) => (
   </svg>
 );
 
-const shareTextToX = async (text: string) => {
-  try { await navigator.clipboard.writeText(text); } catch {}
+const shareTextToX = (text: string) => {
   window.open('https://x.com/intent/post?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
 };
 

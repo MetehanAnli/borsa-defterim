@@ -123,9 +123,7 @@ export const AiAnalysis: React.FC = () => {
     }
   };
 
-  const shareToX = async () => {
-    // Tüm metni panoya kopyala (X ön-doldurmada kırparsa Ctrl+V ile yapıştırılır)
-    try { await navigator.clipboard.writeText(result); } catch {}
+  const shareToX = () => {
     setXShared(true);
     setTimeout(() => setXShared(false), 6000);
     const url = 'https://x.com/intent/post?text=' + encodeURIComponent(result);
@@ -338,7 +336,7 @@ export const AiAnalysis: React.FC = () => {
 
           {xShared && (
             <div className="bg-[var(--bg-main)] border border-[var(--border-color)] p-3 rounded-lg text-sm font-medium flex items-center gap-2">
-              <XLogo size={15} /> X açıldı. Metin eksikse <b>Ctrl+V</b> ile yapıştır, Fintables görselini ekle ve paylaş.
+              <XLogo size={15} /> X açıldı. Fintables görselini ekleyip paylaşabilirsin.
             </div>
           )}
 
