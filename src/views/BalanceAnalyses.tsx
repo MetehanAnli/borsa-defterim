@@ -26,6 +26,17 @@ const scoreColor = (s: number) =>
     ? 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30'
     : 'bg-red-500/15 text-red-500 border-red-500/30';
 
+const XLogo: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
+
+const shareTextToX = async (text: string) => {
+  try { await navigator.clipboard.writeText(text); } catch {}
+  window.open('https://x.com/intent/post?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
+};
+
 const ScoreBadge: React.FC<{ score: number; size?: 'sm' | 'lg' }> = ({ score, size = 'sm' }) => (
   <div
     className={`inline-flex items-baseline gap-0.5 font-extrabold rounded-lg border ${scoreColor(score)} ${
@@ -338,10 +349,18 @@ export const BalanceAnalyses: React.FC = () => {
               </div>
             )}
             
-            <div className="text-right text-xs text-[var(--text-muted)]">
-              Yayınlanma: {new Date(selectedAnalysis.timestamp).toLocaleDateString('tr-TR', {
-                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-              })}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <button
+                onClick={() => shareTextToX(selectedAnalysis.content)}
+                className="flex items-center gap-1.5 text-sm font-bold bg-black text-white px-4 py-2 rounded-lg hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+              >
+                <XLogo size={14} /> X'te Paylaş
+              </button>
+              <div className="text-xs text-[var(--text-muted)]">
+                Yayınlanma: {new Date(selectedAnalysis.timestamp).toLocaleDateString('tr-TR', {
+                  day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                })}
+              </div>
             </div>
           </div>
         )}

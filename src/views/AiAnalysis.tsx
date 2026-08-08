@@ -9,6 +9,12 @@ import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storag
 
 const API_KEY_STORAGE = 'bd-gemini-key';
 
+const XLogo: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
+
 export const AiAnalysis: React.FC = () => {
   const { user } = useData();
 
@@ -26,6 +32,7 @@ export const AiAnalysis: React.FC = () => {
   const [result, setResult] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [xShared, setXShared] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
   // Bilançolar'da yayınlama
@@ -114,6 +121,15 @@ export const AiAnalysis: React.FC = () => {
     } catch {
       setError('Kopyalanamadı. Metni elle seçip kopyalayabilirsin.');
     }
+  };
+
+  const shareToX = async () => {
+    // Tüm metni panoya kopyala (X ön-doldurmada kırparsa Ctrl+V ile yapıştırılır)
+    try { await navigator.clipboard.writeText(result); } catch {}
+    setXShared(true);
+    setTimeout(() => setXShared(false), 6000);
+    const url = 'https://x.com/intent/post?text=' + encodeURIComponent(result);
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const clearImage = () => {
@@ -304,6 +320,9 @@ export const AiAnalysis: React.FC = () => {
               <button onClick={copyResult} className="flex items-center gap-1.5 text-xs font-bold bg-[#10b981]/10 text-[#10b981] px-3 py-1.5 rounded-lg hover:bg-[#10b981]/20">
                 {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? 'Kopyalandı' : 'Kopyala'}
               </button>
+              <button onClick={shareToX} className="flex items-center gap-1.5 text-xs font-bold bg-black text-white px-3 py-1.5 rounded-lg hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80">
+                <XLogo size={13} /> X'te Paylaş
+              </button>
               <button onClick={openPublish} className="flex items-center gap-1.5 text-xs font-bold bg-[#8b5cf6]/10 text-[#8b5cf6] px-3 py-1.5 rounded-lg hover:bg-[#8b5cf6]/20">
                 <LineChart size={14} /> Bilançolar'da Yayınla
               </button>
@@ -316,6 +335,12 @@ export const AiAnalysis: React.FC = () => {
             spellCheck={false}
           />
           <p className="text-xs text-[var(--text-muted)]">Metni düzenleyip kopyalayabilirsin. Paylaşırken Fintables görselini de eklemeyi unutma. ⚠️ Yatırım tavsiyesi değildir.</p>
+
+          {xShared && (
+            <div className="bg-[var(--bg-main)] border border-[var(--border-color)] p-3 rounded-lg text-sm font-medium flex items-center gap-2">
+              <XLogo size={15} /> X açıldı. Metin eksikse <b>Ctrl+V</b> ile yapıştır, Fintables görselini ekle ve paylaş.
+            </div>
+          )}
 
           {published && (
             <div className="bg-[#10b981]/10 border border-[#10b981]/30 text-[#10b981] p-3 rounded-lg text-sm font-medium flex items-center gap-2">
