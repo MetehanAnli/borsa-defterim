@@ -124,8 +124,14 @@ export const AiAnalysis: React.FC = () => {
   };
 
   const shareToX = async () => {
-    // Uzun metin X'in URL sınırını aştığı için ("URI Too Long"), metni panoya
-    // kopyalayıp boş composer'ı açıyoruz; kullanıcı Ctrl+V ile yapıştırır.
+    const encoded = encodeURIComponent(result);
+    // BOSSA (~9662) sorunsuz açıldığından, o boyuta kadar X otomatik doldurur;
+    // daha uzun metinler URL sınırını aşıp hata verdiği için panoya kopyalanır.
+    if (encoded.length <= 9700) {
+      window.open('https://x.com/intent/post?text=' + encoded, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    // Uzun metin URL sınırını aşar ("URI Too Long"): panoya kopyala + boş composer aç.
     try { await navigator.clipboard.writeText(result); } catch {}
     setXShared(true);
     setTimeout(() => setXShared(false), 8000);

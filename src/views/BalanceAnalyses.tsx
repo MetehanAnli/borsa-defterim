@@ -33,6 +33,13 @@ const XLogo: React.FC<{ size?: number }> = ({ size = 14 }) => (
 );
 
 const shareTextToX = async (text: string) => {
+  const encoded = encodeURIComponent(text);
+  // BOSSA (~9662) sorunsuz açıldığından o boyuta kadar X otomatik doldurur;
+  // daha uzun metinler URL sınırını aştığından panoya kopyalanır.
+  if (encoded.length <= 9700) {
+    window.open('https://x.com/intent/post?text=' + encoded, '_blank', 'noopener,noreferrer');
+    return;
+  }
   // Uzun metin URL sınırını aştığından metni panoya kopyalayıp boş composer'ı açıyoruz.
   try {
     await navigator.clipboard.writeText(text);
