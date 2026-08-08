@@ -32,8 +32,13 @@ const XLogo: React.FC<{ size?: number }> = ({ size = 14 }) => (
   </svg>
 );
 
-const shareTextToX = (text: string) => {
-  window.open('https://x.com/intent/post?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
+const shareTextToX = async (text: string) => {
+  // Uzun metin URL sınırını aştığından metni panoya kopyalayıp boş composer'ı açıyoruz.
+  try {
+    await navigator.clipboard.writeText(text);
+    alert('Metin panoya kopyalandı. Açılan X sekmesinde Ctrl+V ile yapıştırıp görseli ekleyin.');
+  } catch {}
+  window.open('https://x.com/compose/post', '_blank', 'noopener,noreferrer');
 };
 
 const ScoreBadge: React.FC<{ score: number; size?: 'sm' | 'lg' }> = ({ score, size = 'sm' }) => (

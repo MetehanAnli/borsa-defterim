@@ -123,11 +123,13 @@ export const AiAnalysis: React.FC = () => {
     }
   };
 
-  const shareToX = () => {
+  const shareToX = async () => {
+    // Uzun metin X'in URL sınırını aştığı için ("URI Too Long"), metni panoya
+    // kopyalayıp boş composer'ı açıyoruz; kullanıcı Ctrl+V ile yapıştırır.
+    try { await navigator.clipboard.writeText(result); } catch {}
     setXShared(true);
-    setTimeout(() => setXShared(false), 6000);
-    const url = 'https://x.com/intent/post?text=' + encodeURIComponent(result);
-    window.open(url, '_blank', 'noopener,noreferrer');
+    setTimeout(() => setXShared(false), 8000);
+    window.open('https://x.com/compose/post', '_blank', 'noopener,noreferrer');
   };
 
   const clearImage = () => {
@@ -336,7 +338,7 @@ export const AiAnalysis: React.FC = () => {
 
           {xShared && (
             <div className="bg-[var(--bg-main)] border border-[var(--border-color)] p-3 rounded-lg text-sm font-medium flex items-center gap-2">
-              <XLogo size={15} /> X açıldı. Fintables görselini ekleyip paylaşabilirsin.
+              <XLogo size={15} /> Metin panoya kopyalandı. X'te <b>Ctrl+V</b> ile yapıştır, Fintables görselini ekle ve paylaş.
             </div>
           )}
 
