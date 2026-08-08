@@ -6,6 +6,7 @@ export const GEMINI_MODEL = 'gemini-flash-lite-latest';
 
 // Kullanıcının istediği analiz tarzının birebir örneği (few-shot altın standart).
 const STYLE_EXAMPLE = `#TURSG | 2026/6 Finansal Görünüm
+
 📌 Temel Veriler (Nakit Makinesi ve Makul Çarpanlar)
 
 * Hisse Fiyatı: 6,66 TL.
@@ -14,6 +15,7 @@ const STYLE_EXAMPLE = `#TURSG | 2026/6 Finansal Görünüm
 * PD/DD: 2,25 → Dengeli. Finansal şirketler ve sigorta devleri için özkaynak kârlılığının bu kadar yüksek olduğu bir tabloda, defter değerinin 2,25 katından fiyatlanmak gayet makuldür.
 
 💬 Yorum: Sanayi şirketlerindeki operasyonel kârsızlık ve devasa borç sarmallarını inceledikten sonra TURSG tablosuna bakmak, adeta çölde vaha bulmak gibidir. Elimizde fiktif beklentilerle değil, doğrudan "nakit ve prim" ile büyüyen, F/K'sı 5 seviyelerinde gezen gerçek bir değer var.
+
 📈 Hisse Performansı (Düzeltme ve Fırsat Penceresi)
 
 * Önceki Bilanço Kapanış (20 Nisan): 7,30 TL.
@@ -22,6 +24,7 @@ const STYLE_EXAMPLE = `#TURSG | 2026/6 Finansal Görünüm
 * Güncel Fiyat (20 Temmuz): 6,66 TL.
 
 💬 Yorum: Hisse 7,44 TL zirvesinden sonra piyasa koşullarıyla birlikte 6,00 TL seviyesine kadar ciddi bir dayak yemiş. Ancak 6,00 TL dibinden sonra bilançonun ayak sesleriyle akıllı para tahtaya girerek fiyatı 6,66 TL'ye kadar toplamış. Bu grafik, "ucuz kalmış kaliteyi dipten toplama" hareketinin net bir özetidir.
+
 📊 Gelir Tablosu (2026/6 vs 2025/6) - "Kârlılıkta Şov"
 
 * 🔺 Prim Üretimi: 94,2 milyar TL → %30 artış. Şirket, iş hacmini ve pazar payını istikrarlı şekilde büyütmeye devam ediyor.
@@ -40,6 +43,7 @@ const STYLE_EXAMPLE = `#TURSG | 2026/6 Finansal Görünüm
 * Çeyreklik Net Kâr Grafiği: Sağ alttaki grafik, temel analistlerin en sevdiği görüntüdür. Zikzak çizen, bir çeyrek kâr bir çeyrek zarar yazan sanayi şirketlerinin aksine; TURSG her çeyrek bir öncekinden daha yüksek net kâr üreterek kusursuz bir merdiven formasyonu çiziyor. Son bar (2026/6) tarihi zirvede.
 
 ✅ Genel Değerlendirme
+
 ✅ Güçlü Yönler:
 
 * 111 milyar TL'lik nakit ve benzeri finansal varlık ile yüksek faiz ortamının en büyük kazananlarından biri olması.
@@ -53,6 +57,7 @@ const STYLE_EXAMPLE = `#TURSG | 2026/6 Finansal Görünüm
 
 🔍 Sonuç:
 TURSG, yatırımcısına "Benim devasa bir pazar payım var, milyarlarca lira prim üretiyorum, kasamda 111 milyar TL nakit var ve kârımı her çeyrek istikrarlı şekilde artırıyorum" diyen, tablo gibi bir bilanço açıklamış. Borsadaki spekülatif köpüklerin patladığı günlerde paranın sığınacağı en korunaklı kalelerden biridir.
+
 🎯 Yatırımcıya Not:
 Eğer portföyünüzde büyüme sancısı çeken, borçla boğuşan ve "bir gün uçacak" umuduyla beklediğiniz yüksek çarpanlı hayal kırıklıkları varsa; TURSG o hayallerin değil, rasyonel gerçeklerin hissesidir. 6,66 TL fiyatı ve 5,63 F/K oranıyla temel analizin tam kalbinde yer alır. Düşüşlerde toplanacak, portföyün defansif ve güçlü "temettü/değer" omurgasını oluşturacak birinci sınıf bir bilançodur.
 
@@ -65,7 +70,9 @@ Eğer portföyünüzde büyüme sancısı çeken, borçla boğuşan ve "bir gün
 * Momentum & İstikrar: 12/15
 
 💬 Skor Yorumu: Devasa nakit pozisyonu, kusursuz kârlılık trendi ve ucuz çarpanlarıyla ortalamanın çok üzerinde, defansif ve güçlü bir bilanço.
+
 #borsa #borsaistanbul #hisse #finans #bilanço #analiz #yatırım #bist #bist100 #piyasa
+
 ⚠️ Yatırım tavsiyesi değildir.
 📊 Görsel Fintables platformundan alınmıştır.`;
 
@@ -93,6 +100,7 @@ KURALLAR:
   * Momentum & İstikrar: 15 (çeyreklik trendlerin istikrarı, kârlılıkta süreklilik)
   Toplam 100'dür; alt puanların toplamı ana skora eşit olmalı. Skoru gerçekçi ver: zayıf/riskli bilançolara düşük, güçlü olanlara yüksek puan. Altına 1 cümlelik "💬 Skor Yorumu" ekle.
 - En sona örnektekine benzer hashtag satırını, "⚠️ Yatırım tavsiyesi değildir." ve "📊 Görsel Fintables platformundan alınmıştır." satırlarını mutlaka ekle.
+- BOŞLUK DÜZENİ (çok önemli): Örnekteki boşluk düzenini birebir uygula. Her ana bölüm başlığından (📌 📈 📊 🧾 📉 ✅ ⚠️ 🔍 🎯 🏆) önce TAM OLARAK bir boş satır bırak. Her "💬 Yorum"/paragraf ile sonraki bölüm başlığı arasına bir boş satır koy. Madde listelerinin (*) içinde boş satır olmasın. Arka arkaya birden fazla boş satır kullanma.
 - SADECE analiz metnini döndür; başında/sonunda açıklama, kod bloğu veya "İşte analiz" gibi ifadeler yazma.
 
 === İSTENEN TARZ (ÖRNEK) ===
@@ -104,6 +112,21 @@ export interface AnalysisInput {
   base64: string; // görselin base64 verisi (data: öneki olmadan)
   mimeType: string;
   extraInstruction?: string;
+}
+
+// Boşlukları tutarlı hale getirir: her ana bölüm başlığından önce tek boş satır,
+// satır sonu boşluklarını temizler, arka arkaya fazla boş satırları teke indirir.
+function tidySpacing(text: string): string {
+  const headerRe = /^(📌|📈|🧾|📉|🔍|🎯|🏆|💬|#|✅ Genel|✅ Güçlü|⚠️ Zayıf|📊 Gelir)/;
+  const lines = text.replace(/[ \t]+$/gm, '').split('\n');
+  const out: string[] = [];
+  for (const line of lines) {
+    if (headerRe.test(line.trim()) && out.length > 0 && out[out.length - 1].trim() !== '') {
+      out.push('');
+    }
+    out.push(line);
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 // Analiz metnindeki "🏆 Borsa Defterim Skoru: 92/100" ifadesinden skoru çeker.
@@ -144,5 +167,5 @@ export async function generateFinancialAnalysis(input: AnalysisInput): Promise<s
   if (!text || !text.trim()) {
     throw new Error('Model boş yanıt döndürdü. Görselin net ve okunaklı olduğundan emin olun.');
   }
-  return text.trim();
+  return tidySpacing(text);
 }
