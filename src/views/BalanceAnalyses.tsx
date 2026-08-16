@@ -4,7 +4,7 @@ import { Modal } from '../components/Modal';
 import { Search, Plus, Trash2, Image as ImageIcon, X, Loader2, Share2, Check, ArrowUpDown } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { db, storage } from '../utils/firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDocs, where } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDoc, getDocs, where } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 
 interface Analysis {
@@ -32,8 +32,17 @@ const XLogo: React.FC<{ size?: number }> = ({ size = 14 }) => (
   </svg>
 );
 
-const shareTextToX = async (text: string) => {
-  const encoded = encodeURIComponent(text);
+const shareTextToX = async (text: string, ticker?: string) => {
+  // Bu hisse için kayıtlı önceki X gönderisi varsa alıntı için metne ekle.
+  let shareText = text;
+  if (ticker) {
+    try {
+      const snap = await getDoc(doc(db, 'x_last_posts', ticker.toUpperCase()));
+      const prevUrl = snap.exists() ? (snap.data() as any).url : '';
+      if (prevUrl) shareText = `${text}\n\n${prevUrl}`;
+    } catch {}
+  }
+  const encoded = encodeURIComponent(shareText);
   // BOSSA (~9662) sorunsuz açıldığından o boyuta kadar X otomatik doldurur;
   // daha uzun metinler URL sınırını aştığından panoya kopyalanır.
   if (encoded.length <= 9700) {
@@ -42,7 +51,7 @@ const shareTextToX = async (text: string) => {
   }
   // Uzun metin URL sınırını aştığından metni panoya kopyalayıp boş composer'ı açıyoruz.
   try {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(shareText);
     alert('Metin panoya kopyalandı. Açılan X sekmesinde Ctrl+V ile yapıştırıp görseli ekleyin.');
   } catch {}
   window.open('https://x.com/compose/post', '_blank', 'noopener,noreferrer');
@@ -362,7 +371,7 @@ export const BalanceAnalyses: React.FC = () => {
             
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <button
-                onClick={() => shareTextToX(selectedAnalysis.content)}
+                onClick={() => shareTextToX(selectedAnalysis.content, selectedAnalysis.ticker)}
                 className="flex items-center gap-1.5 text-sm font-bold bg-black text-white px-4 py-2 rounded-lg hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
               >
                 <XLogo size={14} /> X'te Paylaş

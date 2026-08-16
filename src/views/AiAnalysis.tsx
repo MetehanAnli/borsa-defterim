@@ -4,7 +4,7 @@ import { useData } from '../context/DataContext';
 import { Sparkles, Upload, Copy, Check, RefreshCw, Trash2, KeyRound, Lock, ExternalLink, AlertCircle, Send, CheckCircle2, LineChart } from 'lucide-react';
 import { generateFinancialAnalysis, extractScore, GEMINI_MODEL } from '../utils/geminiAnalysis';
 import { db, storage } from '../utils/firebase';
-import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, setDoc, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 
 const API_KEY_STORAGE = 'bd-gemini-key';
@@ -34,6 +34,11 @@ export const AiAnalysis: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [xShared, setXShared] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+
+  // Alıntılama: hisse başına son X gönderi linki (Firestore: x_last_posts/{ticker})
+  const [xPrevUrl, setXPrevUrl] = useState<string>('');
+  const [xUrlInput, setXUrlInput] = useState<string>('');
+  const [xUrlSaved, setXUrlSaved] = useState(false);
 
   // Bilançolar'da yayınlama
   const [showPublish, setShowPublish] = useState(false);
@@ -124,7 +129,9 @@ export const AiAnalysis: React.FC = () => {
   };
 
   const shareToX = async () => {
-    const encoded = encodeURIComponent(result);
+    // Önceki gönderi linki varsa metnin sonuna ekle -> X onu alıntı olarak gösterir.
+    const shareText = xPrevUrl ? `${result}\n\n${xPrevUrl}` : result;
+    const encoded = encodeURIComponent(shareText);
     // BOSSA (~9662) sorunsuz açıldığından, o boyuta kadar X otomatik doldurur;
     // daha uzun metinler URL sınırını aşıp hata verdiği için panoya kopyalanır.
     if (encoded.length <= 9700) {
@@ -132,7 +139,7 @@ export const AiAnalysis: React.FC = () => {
       return;
     }
     // Uzun metin URL sınırını aşar ("URI Too Long"): panoya kopyala + boş composer aç.
-    try { await navigator.clipboard.writeText(result); } catch {}
+    try { await navigator.clipboard.writeText(shareText); } catch {}
     setXShared(true);
     setTimeout(() => setXShared(false), 8000);
     window.open('https://x.com/compose/post', '_blank', 'noopener,noreferrer');
@@ -157,6 +164,37 @@ export const AiAnalysis: React.FC = () => {
     setPubTitle(meta.title || 'Finansal Analiz');
     setPublishError(null);
     setShowPublish(true);
+  };
+
+  // Analiz üretildiğinde, bu hissenin daha önce kaydedilmiş X gönderi linkini yükle.
+  useEffect(() => {
+    const meta = extractMeta(result);
+    if (!result || !meta.ticker) { setXPrevUrl(''); setXUrlInput(''); return; }
+    let active = true;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'x_last_posts', meta.ticker));
+        const url = snap.exists() ? (snap.data() as any).url || '' : '';
+        if (active) { setXPrevUrl(url); setXUrlInput(url); }
+      } catch {
+        if (active) { setXPrevUrl(''); setXUrlInput(''); }
+      }
+    })();
+    return () => { active = false; };
+  }, [result]);
+
+  const saveXUrl = async () => {
+    const meta = extractMeta(result);
+    const url = xUrlInput.trim();
+    if (!meta.ticker || !url) return;
+    try {
+      await setDoc(doc(db, 'x_last_posts', meta.ticker), { url, ticker: meta.ticker, updatedAt: Date.now() });
+      setXPrevUrl(url);
+      setXUrlSaved(true);
+      setTimeout(() => setXUrlSaved(false), 2500);
+    } catch (e) {
+      console.error('X link kaydedilemedi', e);
+    }
   };
 
   const publishToBilanco = async () => {
@@ -347,6 +385,36 @@ export const AiAnalysis: React.FC = () => {
               <XLogo size={15} /> Metin panoya kopyalandı. X'te <b>Ctrl+V</b> ile yapıştır, Fintables görselini ekle ve paylaş.
             </div>
           )}
+
+          {/* Alıntılama: önceki gönderi linki */}
+          <div className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg p-3 flex flex-col gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)]">
+              <XLogo size={12} /> Alıntılama (opsiyonel)
+            </div>
+            {xPrevUrl ? (
+              <p className="text-xs text-[#10b981] font-medium flex items-center gap-1">
+                <Check size={13} /> Bu hissenin önceki gönderisi paylaşımda otomatik alıntılanacak.
+              </p>
+            ) : (
+              <p className="text-xs text-[var(--text-muted)]">Bu hisse için kayıtlı önceki gönderi yok.</p>
+            )}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                value={xUrlInput}
+                onChange={(e) => setXUrlInput(e.target.value)}
+                placeholder="https://x.com/kullanici/status/..."
+                className="flex-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-2 text-sm outline-none focus:border-[#8b5cf6]"
+              />
+              <button
+                onClick={saveXUrl}
+                disabled={!xUrlInput.trim()}
+                className="px-4 py-2 bg-[#8b5cf6]/15 text-[#8b5cf6] rounded-lg text-sm font-bold hover:bg-[#8b5cf6]/25 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {xUrlSaved ? <Check size={14} /> : null} Linki Kaydet
+              </button>
+            </div>
+            <p className="text-[11px] text-[var(--text-muted)]">Paylaştıktan sonra o gönderinin linkini buraya yapıştırıp kaydet; bir sonraki analizde otomatik alıntılanır.</p>
+          </div>
 
           {published && (
             <div className="bg-[#10b981]/10 border border-[#10b981]/30 text-[#10b981] p-3 rounded-lg text-sm font-medium flex items-center gap-2">
