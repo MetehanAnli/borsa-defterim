@@ -74,9 +74,9 @@ Eğer portföyünüzde büyüme sancısı çeken, borçla boğuşan ve "bir gün
 #borsa #hisse #bilanço #analiz #bist
 
 ⚠️ Yatırım tavsiyesi değildir.
-📊 Görsel Fintables platformundan alınmıştır.`;
+📊 Görsel Matriks platformundan alınmıştır.`;
 
-const SYSTEM_PROMPT = `Sen, Borsa İstanbul (BIST) hisseleri üzerine içerik üreten deneyimli bir temel analiz uzmanısın. Sana bir şirketin Fintables "Özet Finansal Rapor" ekran görüntüsü verilecek.
+const SYSTEM_PROMPT = `Sen, Borsa İstanbul (BIST) hisseleri üzerine içerik üreten deneyimli bir temel analiz uzmanısın. Sana bir şirketin Matriks "Özet Finansal Rapor" ekran görüntüsü verilecek.
 
 Görseldeki TÜM verileri dikkatle oku:
 - Başlık: hisse kodu, dönem (örn. 2026/6), Fiyat, Piyasa Değeri, F/K, PD/DD.
@@ -99,7 +99,7 @@ KURALLAR:
   * Değerleme (Ucuzluk): 20 (F/K, PD/DD gibi çarpanların kârlılığa göre ucuz/pahalı olması)
   * Momentum & İstikrar: 15 (çeyreklik trendlerin istikrarı, kârlılıkta süreklilik)
   Toplam 100'dür; alt puanların toplamı ana skora eşit olmalı. Skoru gerçekçi ver: zayıf/riskli bilançolara düşük, güçlü olanlara yüksek puan. Altına 1 cümlelik "💬 Skor Yorumu" ekle.
-- En sona SADECE şu kısa etiket satırını ekle (fazla etiket koyma): "#borsa #hisse #bilanço #analiz #bist". Ardından "⚠️ Yatırım tavsiyesi değildir." ve "📊 Görsel Fintables platformundan alınmıştır." satırlarını mutlaka ekle.
+- En sona SADECE şu kısa etiket satırını ekle (fazla etiket koyma): "#borsa #hisse #bilanço #analiz #bist". Ardından "⚠️ Yatırım tavsiyesi değildir." ve "📊 Görsel Matriks platformundan alınmıştır." satırlarını mutlaka ekle.
 - BOŞLUK DÜZENİ (çok önemli): Örnekteki boşluk düzenini birebir uygula. Her ana bölüm başlığından (📌 📈 📊 🧾 📉 ✅ ⚠️ 🔍 🎯 🏆) önce TAM OLARAK bir boş satır bırak. Her "💬 Yorum"/paragraf ile sonraki bölüm başlığı arasına bir boş satır koy. Madde listelerinin (*) içinde boş satır olmasın. Arka arkaya birden fazla boş satır kullanma.
 - SADECE analiz metnini döndür; başında/sonunda açıklama, kod bloğu veya "İşte analiz" gibi ifadeler yazma.
 
@@ -147,8 +147,8 @@ export async function generateFinancialAnalysis(input: AnalysisInput): Promise<s
   const ai = new GoogleGenAI({ apiKey });
 
   const userText = extraInstruction?.trim()
-    ? `Bu Fintables ekran görüntüsündeki şirketi örnekle aynı tarzda analiz et.\n\nEk talimat: ${extraInstruction.trim()}`
-    : 'Bu Fintables ekran görüntüsündeki şirketi örnekle aynı tarzda analiz et.';
+    ? `Bu Matriks ekran görüntüsündeki şirketi örnekle aynı tarzda analiz et.\n\nEk talimat: ${extraInstruction.trim()}`
+    : 'Bu Matriks ekran görüntüsündeki şirketi örnekle aynı tarzda analiz et.';
 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL,

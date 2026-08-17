@@ -96,7 +96,7 @@ export const AiAnalysis: React.FC = () => {
 
   const runAnalysis = async () => {
     if (!apiKey) { setError('Önce Gemini API anahtarını kaydet.'); setShowKeyEditor(true); return; }
-    if (!imageBase64) { setError('Analiz için bir Fintables görseli yükle.'); return; }
+    if (!imageBase64) { setError('Analiz için bir Matriks görseli yükle.'); return; }
     setLoading(true);
     setError(null);
     setResult('');
@@ -205,7 +205,7 @@ export const AiAnalysis: React.FC = () => {
       const upperTicker = pubTicker.toUpperCase().trim();
       let uploadedUrl: string | null = null;
 
-      // Fintables görselini Storage'a yükle (mevcut Bilançolar akışıyla aynı)
+      // Matriks görselini Storage'a yükle (mevcut Bilançolar akışıyla aynı)
       if (includeImage && imagePreview) {
         const ext = (imageMime.split('/')[1] || 'png').replace('jpeg', 'jpg');
         const storageRef = ref(storage, `bilancolar/${upperTicker}_${Date.now()}.${ext}`);
@@ -259,7 +259,7 @@ export const AiAnalysis: React.FC = () => {
         <h2 className="text-2xl font-bold flex items-center gap-2">
           <Sparkles className="text-[#8b5cf6]" /> AI Finansal Analiz
         </h2>
-        <p className="text-[var(--text-muted)] text-sm">Fintables özet raporunun ekran görüntüsünü yükle, yapay zeka senin tarzında analiz yazsın.</p>
+        <p className="text-[var(--text-muted)] text-sm">Matriks özet raporunun ekran görüntüsünü yükle, yapay zeka senin tarzında analiz yazsın.</p>
       </div>
 
       {/* API Anahtarı */}
@@ -302,7 +302,7 @@ export const AiAnalysis: React.FC = () => {
 
       {/* Görsel Yükleme */}
       <Card className="flex flex-col gap-4">
-        <div className="flex items-center gap-2 font-bold"><Upload size={18} className="text-[#8b5cf6]" /> Fintables Görseli</div>
+        <div className="flex items-center gap-2 font-bold"><Upload size={18} className="text-[#8b5cf6]" /> Matriks Görseli</div>
 
         {imagePreview ? (
           <div className="relative group">
@@ -378,11 +378,11 @@ export const AiAnalysis: React.FC = () => {
             className="w-full min-h-[500px] bg-[var(--bg-main)] border border-[var(--border-color)] rounded-xl p-4 outline-none focus:border-[#8b5cf6] text-sm leading-relaxed font-mono resize-y"
             spellCheck={false}
           />
-          <p className="text-xs text-[var(--text-muted)]">Metni düzenleyip kopyalayabilirsin. Paylaşırken Fintables görselini de eklemeyi unutma. ⚠️ Yatırım tavsiyesi değildir.</p>
+          <p className="text-xs text-[var(--text-muted)]">Metni düzenleyip kopyalayabilirsin. Paylaşırken Matriks görselini de eklemeyi unutma. ⚠️ Yatırım tavsiyesi değildir.</p>
 
           {xShared && (
             <div className="bg-[var(--bg-main)] border border-[var(--border-color)] p-3 rounded-lg text-sm font-medium flex items-center gap-2">
-              <XLogo size={15} /> Metin panoya kopyalandı. X'te <b>Ctrl+V</b> ile yapıştır, Fintables görselini ekle ve paylaş.
+              <XLogo size={15} /> Metin panoya kopyalandı. X'te <b>Ctrl+V</b> ile yapıştır, Matriks görselini ekle ve paylaş.
             </div>
           )}
 
@@ -438,7 +438,7 @@ export const AiAnalysis: React.FC = () => {
               {imagePreview && (
                 <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
                   <input type="checkbox" checked={includeImage} onChange={(e) => setIncludeImage(e.target.checked)} className="w-4 h-4 accent-[#8b5cf6]" />
-                  Fintables görselini karta ekle
+                  Matriks görselini karta ekle
                 </label>
               )}
               {publishError && (
