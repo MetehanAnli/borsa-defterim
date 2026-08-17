@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '../components/Card';
 import { Modal } from '../components/Modal';
-import { Search, Plus, Trash2, Image as ImageIcon, X, Loader2, Share2, Check, ArrowUpDown } from 'lucide-react';
+import { Search, Plus, Trash2, Image as ImageIcon, X, Loader2, Share2, Check, ArrowUpDown, ArrowLeft } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { db, storage } from '../utils/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDoc, getDocs, where } from 'firebase/firestore';
@@ -68,6 +68,96 @@ const ScoreBadge: React.FC<{ score: number; size?: 'sm' | 'lg' }> = ({ score, si
     <span className="text-[0.55em] font-bold opacity-70">/100</span>
   </div>
 );
+
+// Tek bir analizin tam sayfa görünümü (modal yerine; SEO için kendi başlık/açıklaması olur).
+const AnalysisDetailPage: React.FC<{
+  analysis: Analysis;
+  isAdmin: boolean;
+  onBack: () => void;
+  onDelete: () => void;
+}> = ({ analysis, isAdmin, onBack, onDelete }) => {
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = `${analysis.ticker} ${analysis.title} | Borsa Defterim`;
+    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    const created = !meta;
+    const prevDesc = meta?.getAttribute('content') || '';
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'description');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', analysis.content.replace(/\s+/g, ' ').trim().slice(0, 155));
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    return () => {
+      document.title = prevTitle;
+      if (meta) { if (created) meta.remove(); else meta.setAttribute('content', prevDesc); }
+    };
+  }, [analysis]);
+
+  return (
+    <article className="flex flex-col gap-5 max-w-3xl mx-auto w-full">
+      <button
+        onClick={onBack}
+        className="flex items-center gap-1.5 text-sm font-bold text-[#8b5cf6] hover:underline self-start"
+      >
+        <ArrowLeft size={16} /> Tüm Analizler
+      </button>
+
+      <header className="flex flex-col gap-3 border-b border-[var(--border-color)] pb-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="inline-block bg-[#8b5cf6]/10 text-[#8b5cf6] text-sm font-extrabold px-3 py-1 rounded-lg">
+            {analysis.ticker}
+          </span>
+          {typeof analysis.score === 'number' && <ScoreBadge score={analysis.score} size="lg" />}
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold leading-tight">{analysis.title}</h1>
+        <div className="text-xs text-[var(--text-muted)] font-medium">
+          Yayınlanma: {new Date(analysis.timestamp).toLocaleDateString('tr-TR', {
+            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+          })}
+        </div>
+      </header>
+
+      {typeof analysis.score === 'number' && (
+        <div className="flex items-center gap-3 bg-[var(--bg-card)] p-3 rounded-xl border border-[var(--border-color)]">
+          <ScoreBadge score={analysis.score} size="lg" />
+          <div>
+            <p className="font-bold text-sm">Borsa Defterim Skoru</p>
+            <p className="text-xs text-[var(--text-muted)]">Yapay zekânın 100 üzerinden genel değerlendirmesi</p>
+          </div>
+        </div>
+      )}
+
+      <div className="text-[var(--text-main)] text-sm sm:text-base whitespace-pre-wrap leading-relaxed">
+        {analysis.content}
+      </div>
+
+      {analysis.imageUrl && (
+        <div className="w-full rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-main)] flex items-center justify-center">
+          <img src={analysis.imageUrl} alt={`${analysis.ticker} bilanço görseli`} className="w-full object-contain" />
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 flex-wrap border-t border-[var(--border-color)] pt-4">
+        <button
+          onClick={() => shareTextToX(analysis.content, analysis.ticker)}
+          className="flex items-center gap-1.5 text-sm font-bold bg-black text-white px-4 py-2 rounded-lg hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+        >
+          <XLogo size={14} /> X'te Paylaş
+        </button>
+        {isAdmin && (
+          <button
+            onClick={onDelete}
+            className="flex items-center gap-1.5 text-sm font-bold bg-red-500/10 text-red-500 px-4 py-2 rounded-lg hover:bg-red-500/20"
+          >
+            <Trash2 size={14} /> Sil
+          </button>
+        )}
+      </div>
+    </article>
+  );
+};
 
 export const BalanceAnalyses: React.FC = () => {
   const { user } = useData(); // Admin ise user dolu gelir
@@ -184,6 +274,18 @@ export const BalanceAnalyses: React.FC = () => {
       alert("Hata oluştu.");
     }
   };
+
+  // Bir analiz seçiliyse tam sayfa detay göster (modal yerine, SEO dostu)
+  if (selectedAnalysis) {
+    return (
+      <AnalysisDetailPage
+        analysis={selectedAnalysis}
+        isAdmin={!!user}
+        onBack={() => handleSelect(null)}
+        onDelete={async () => { await handleDelete(selectedAnalysis); handleSelect(null); }}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -338,53 +440,6 @@ export const BalanceAnalyses: React.FC = () => {
         </Modal>
       )}
 
-      {/* Analiz Detay Modalı */}
-      <Modal
-        isOpen={!!selectedAnalysis}
-        onClose={() => handleSelect(null)}
-        title={`${selectedAnalysis?.ticker} - ${selectedAnalysis?.title}`}
-      >
-        {selectedAnalysis && (
-          <div className="flex flex-col gap-5">
-            {typeof selectedAnalysis.score === 'number' && (
-              <div className="flex items-center gap-3 bg-[var(--bg-card)] p-3 rounded-xl border border-[var(--border-color)]">
-                <ScoreBadge score={selectedAnalysis.score} size="lg" />
-                <div>
-                  <p className="font-bold text-sm">Borsa Defterim Skoru</p>
-                  <p className="text-xs text-[var(--text-muted)]">Yapay zekânın 100 üzerinden genel değerlendirmesi</p>
-                </div>
-              </div>
-            )}
-            <p className="text-[var(--text-main)] text-sm whitespace-pre-wrap leading-relaxed bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-color)]">
-              {selectedAnalysis.content}
-            </p>
-            
-            {selectedAnalysis.imageUrl && (
-              <div className="w-full rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-main)] flex items-center justify-center">
-                <img 
-                  src={selectedAnalysis.imageUrl} 
-                  alt={selectedAnalysis.ticker} 
-                  className="w-full max-h-[70vh] object-contain" 
-                />
-              </div>
-            )}
-            
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <button
-                onClick={() => shareTextToX(selectedAnalysis.content, selectedAnalysis.ticker)}
-                className="flex items-center gap-1.5 text-sm font-bold bg-black text-white px-4 py-2 rounded-lg hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
-              >
-                <XLogo size={14} /> X'te Paylaş
-              </button>
-              <div className="text-xs text-[var(--text-muted)]">
-                Yayınlanma: {new Date(selectedAnalysis.timestamp).toLocaleDateString('tr-TR', {
-                  day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 };
