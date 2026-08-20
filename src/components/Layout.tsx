@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, TrendingUp, Rocket, Clock, Layers, PieChart, Sparkles } from 'lucide-react';
+import { LayoutDashboard, ArrowRightLeft, DollarSign, Eye, LineChart, Settings as SettingsIcon, Sun, Moon, User, Rocket, Clock, Layers, PieChart, Sparkles } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useData } from '../context/DataContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -12,6 +12,26 @@ interface LayoutProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
 }
+
+// Borsa Defterim marka logosu (favicon ile aynı) — yükselen çubuklar + trend çizgisi.
+const BrandLogo: React.FC<{ className?: string }> = ({ className }) => (
+  <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+    <defs>
+      <linearGradient id="bd-header" x1="0" y1="64" x2="64" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stopColor="#10b981" />
+        <stop offset="1" stopColor="#3b82f6" />
+      </linearGradient>
+    </defs>
+    <rect width="64" height="64" rx="15" fill="url(#bd-header)" />
+    <g fill="#ffffff">
+      <rect x="14" y="36" width="7" height="14" rx="3" />
+      <rect x="28.5" y="28" width="7" height="22" rx="3" />
+      <rect x="43" y="19" width="7" height="31" rx="3" />
+    </g>
+    <path d="M14 31 L29 23 L36 27 L51 13" fill="none" stroke="#ffffff" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="51" cy="13" r="3.4" fill="#ffffff" />
+  </svg>
+);
 
 const TABS = [
   { id: 'dashboard', label: 'Panel', icon: LayoutDashboard },
@@ -44,9 +64,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       <header className="sticky top-0 z-40 w-full border-b border-[var(--border-color)] bg-[var(--bg-main)]/80 backdrop-blur-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5 select-none" onDoubleClick={!user ? loginWithGoogle : undefined}>
-            <div className="w-9 h-9 rounded-xl bg-[#0f1115] dark:bg-white flex items-center justify-center text-white dark:text-[#0f1115] shadow-sm">
-              <TrendingUp size={22} strokeWidth={2.5} />
-            </div>
+            <BrandLogo className="w-9 h-9 rounded-xl shadow-sm" />
             <span className="text-[22px] font-extrabold italic tracking-tight hidden lg:block bg-gradient-to-r from-[#10b981] to-[#3b82f6] bg-clip-text text-transparent drop-shadow-sm whitespace-nowrap">Borsa Defterim</span>
           </div>
 
